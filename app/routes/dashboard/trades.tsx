@@ -6,19 +6,19 @@ export async function loader() {
             id: 1,
             symbol: "RELIANCE",
             quantity: 10,
-            price: 2500,
+            price: 2500
         },
         {
             id: 2,
             symbol: "TCS",
             quantity: 5,
-            price: 3800,
-        },
+            price: 3800
+        }
     ];
 }
 
 export default function TradesPage({
-    loaderData,
+    loaderData
 }: any) {
     return (
         <div>

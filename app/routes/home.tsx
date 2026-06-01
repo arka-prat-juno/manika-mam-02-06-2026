@@ -1,12 +1,12 @@
 
 export default function HomePage() {
-  return (
-    <div>
-      <h1>Trade Accountant</h1>
+    return (
+        <div>
+            <h1>Trade Accountant</h1>
 
-      <p>
-        Welcome to the dashboard.
-      </p>
-    </div>
-  );
+            <p>
+                Welcome to the dashboard.
+            </p>
+        </div>
+    );
 }

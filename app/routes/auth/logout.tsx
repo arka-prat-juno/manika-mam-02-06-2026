@@ -1,14 +1,16 @@
 // app/routes/auth/logout.tsx
 
-import { redirect } from "react-router";
+import {
+    redirect 
+} from "react-router";
 
 export async function loader() {
-  // later:
-  // clear jwt cookie
+    // later:
+    // clear jwt cookie
 
-  return redirect("/login");
+    return redirect("/login");
 }
 
 export default function LogoutPage() {
-  return null;
+    return null;
 }
