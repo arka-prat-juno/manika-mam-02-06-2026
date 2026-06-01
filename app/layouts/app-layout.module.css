@@ -1,0 +1,10 @@
+.container {
+  min-height: 100vh;
+
+  background: #030712;
+  color: white;
+}
+
+.main {
+  padding: 24px;
+}
