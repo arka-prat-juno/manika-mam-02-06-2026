@@ -18,7 +18,9 @@ import {
 import {
     requireUser
 } from "~/utils/auth.server";
-import { doALogin } from "~/database/utils.server";
+import {
+    doALogin 
+} from "~/database/utils.server";
 
 const BASE_URL =
     "http://xts.achintya.net.in:3000/apimarketdata";
@@ -123,6 +125,7 @@ export async function loader({
     const stream =
         new ReadableStream({
             async start(controller) {
+                let closed = false;
                 const encoder =
                     new TextEncoder();
 
@@ -134,20 +137,20 @@ export async function loader({
                             GET ACTIVE POSITIONS
                             =========================
                             */
-                           const whereClause =
-    currentUser.role === "admin"
-        ? gt(positions.quantity, 0)
-        : and(
-            eq(
-                positions.userId,
-                currentUser.id
-            ),
+                            const whereClause =
+                                currentUser.role === "admin"
+                                    ? gt(positions.quantity, 0)
+                                    : and(
+                                        eq(
+                                            positions.userId,
+                                            currentUser.id
+                                        ),
 
-            gt(
-                positions.quantity,
-                0
-            )
-        );
+                                        gt(
+                                            positions.quantity,
+                                            0
+                                        )
+                                    );
 
                             const activePositions =
                                 await db.query.positions.findMany({
@@ -240,12 +243,12 @@ export async function loader({
                             const futures =
                                 updatedPositions.filter((p) =>
                                     p.instrumentType ===
-                    "FUTURE");
+                    "FUTURE").sort((a, b) => a.id - b.id);
 
                             const options =
                                 updatedPositions.filter((p) =>
                                     p.instrumentType ===
-                    "OPTIONS");
+                    "OPTIONS").sort((a, b) => a.id - b.id);
 
                             /*
                             =========================

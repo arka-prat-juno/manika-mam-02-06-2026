@@ -60,11 +60,11 @@ export async function loader({
 
     const futures = rows.filter((position) =>
         position.instrumentType ===
-      "FUTURE");
+      "FUTURE").sort((a, b) => a.id - b.id);
 
     const options = rows.filter((position) =>
         position.instrumentType ===
-      "OPTIONS");
+      "OPTIONS").sort((a, b) => a.id - b.id);
 
     return {
         user,
@@ -77,14 +77,22 @@ export default function TradesPage({
     loaderData
 }: any) {
     const {
-        user,
-        futures,
-        options
+        user
     } = loaderData;
+
     const [
         liveData,
         setLiveData
-    ] =useState(loaderData);
+    ] = useState({
+        futures: loaderData.futures,
+        options: loaderData.options
+    });
+
+    const futures =
+        liveData.futures;
+
+    const options =
+        liveData.options;
     useEffect(() => {
         const es = new EventSource("/dashboard/trades/live");
 
