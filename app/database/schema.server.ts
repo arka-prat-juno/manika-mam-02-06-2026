@@ -10,6 +10,7 @@ import {
     text,
     timestamp,
     date,
+    bigint,
     numeric,
     index,
     uniqueIndex
@@ -146,6 +147,12 @@ export const positions = pgTable(
         positionType: positionTypeEnum("position_type").notNull(),
 
         quantity: integer("quantity").notNull().default(0),
+        exchangeInstrumentId: bigint(
+            "exchange_instrument_id",
+            {
+                mode: "number"
+            }
+        ).notNull(),
 
         lotSize: integer("lot_size").notNull().default(1),
 

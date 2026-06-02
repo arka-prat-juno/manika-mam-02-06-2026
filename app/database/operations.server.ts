@@ -15,6 +15,9 @@ import {
 import {
     requireUser
 } from "~/utils/auth.server";
+import {
+    getInstrumentDetails
+} from "~/database/utils.server";
 const CURRENT_USER_ID = 1;
 
 type ActionResult = {
@@ -241,6 +244,14 @@ export async function addTrade(request: Request): Promise<ActionResult | Respons
 
         positionId = existing.id;
     } else {
+        const instrument = await getInstrumentDetails({
+            script: data.script,
+            exchange: data.exchange,
+            instrumentType: data.instrumentType,
+            expiry: data.expiry,
+            strikePrice: data.strikePrice,
+            optionType: data.optionType
+        });
         const inserted = await db
             .insert(positions)
             .values({
