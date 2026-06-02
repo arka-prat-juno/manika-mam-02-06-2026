@@ -12,6 +12,9 @@ import {
     positions, trades 
 } from "./schema.server";
 
+import {
+    requireUser
+} from "~/utils/auth.server";
 const CURRENT_USER_ID = 1;
 
 type ActionResult = {
@@ -201,6 +204,9 @@ function computeUpdatedPosition(
 }
 
 export async function addTrade(request: Request): Promise<ActionResult | Response> {
+    const user = await requireUser(request);
+
+    const currentUserId = user.id;
     const formData = await request.formData();
 
     const data = parseTradeForm(formData);
@@ -215,7 +221,7 @@ export async function addTrade(request: Request): Promise<ActionResult | Respons
     }
 
     const existing = await findMatchingPosition(
-        CURRENT_USER_ID,
+        currentUserId,
         data
     );
 
@@ -238,7 +244,7 @@ export async function addTrade(request: Request): Promise<ActionResult | Respons
         const inserted = await db
             .insert(positions)
             .values({
-                userId: CURRENT_USER_ID,
+                userId: currentUserId,
                 exchange: data.exchange,
                 instrumentType: data.instrumentType,
                 script: data.script,
@@ -261,7 +267,7 @@ export async function addTrade(request: Request): Promise<ActionResult | Respons
 
     await db.insert(trades).values({
         positionId,
-        userId: CURRENT_USER_ID,
+        userId: currentUserId,
         tradeType: "ADD",
         quantity: data.quantity,
         price: data.entryPrice.toFixed(2),
