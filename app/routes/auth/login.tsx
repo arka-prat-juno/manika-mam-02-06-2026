@@ -1,31 +1,38 @@
 import {
-    Form, redirect, useActionData 
+    Form,
+    redirect,
+    useActionData
 } from "react-router";
+
 import bcrypt from "bcryptjs";
 
 import {
-    eq 
+    eq
 } from "drizzle-orm";
 
 import {
-    db 
+    db
 } from "../../database/db.server";
+
 import {
-    users 
+    users
 } from "../../database/schema.server";
 
 import {
-    createSession 
+    createSession
 } from "~/utils/auth.server";
 
+import styles from "./login.module.css";
+
 export async function action({
-    request 
+    request
 }: any) {
     const formData = await request.formData();
 
     const username = String(formData.get("username"));
+
     const password = String(formData.get("password"));
-    console.log(username);
+
     const user = await db.query.users.findFirst({
         where: eq(users.username, username)
     });
@@ -62,30 +69,58 @@ export default function LoginPage() {
     const actionData = useActionData() as any;
 
     return (
-        <div>
-            <h1>Login</h1>
+        <div className={styles.page}>
+            <div className={styles.card}>
+                <h1 className={styles.title}>
+                    Welcome Back
+                </h1>
 
-            {actionData?.error && (
-                <p>{actionData.error}</p>
-            )}
+                <p className={styles.subtitle}>
+                    Login to continue
+                </p>
 
-            <Form method="post">
-                <input
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                />
+                {actionData?.error && (
+                    <div className={styles.error}>
+                        {actionData.error}
+                    </div>
+                )}
 
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                />
+                <Form
+                    method="post"
+                    className={styles.form}
+                >
+                    <div className={styles.field}>
+                        <label>
+                            Username
+                        </label>
 
-                <button type="submit">
-                    Login
-                </button>
-            </Form>
+                        <input
+                            type="text"
+                            name="username"
+                            placeholder="Enter username"
+                        />
+                    </div>
+
+                    <div className={styles.field}>
+                        <label>
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Enter password"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className={styles.button}
+                    >
+                        Login
+                    </button>
+                </Form>
+            </div>
         </div>
     );
 }

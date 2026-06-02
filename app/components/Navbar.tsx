@@ -6,10 +6,7 @@ import styles from "./navbar.module.css";
 export function Navbar() {
     return (
         <nav className={styles.navbar}>
-            <div className={styles.logo}>
-                Trade Accountant
-            </div>
-
+            {/* Logo removed */}
             <div className={styles.links}>
                 <NavLink
                     to="/dashboard/trades"
@@ -30,6 +27,19 @@ export function Navbar() {
                     className={styles.link}
                 >
                     Add Trade
+                </NavLink>
+                {/* manage-users */}
+                <NavLink
+                    to="/dashboard/manage-users"
+                    className={styles.link}
+                >
+                    Manage Users
+                </NavLink>
+                <NavLink
+                    to="/logout"
+                    className={styles.link}
+                >
+                    Logout
                 </NavLink>
             </div>
         </nav>

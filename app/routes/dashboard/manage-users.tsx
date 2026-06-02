@@ -15,8 +15,7 @@ import {
 } from "../../database/db.server";
 
 import {
-    users,
-    profiles
+    users
 } from "../../database/schema.server";
 
 import {
@@ -29,9 +28,6 @@ export async function loader({
     await requireAdmin(request);
 
     const allUsers = await db.query.users.findMany({
-        with: {
-            profile: true
-        },
         orderBy: (users, {
             asc 
         }) => [
@@ -100,20 +96,13 @@ export async function action({
             10
         );
 
-        const [
-            newUser
-        ] = await db
+        await db
             .insert(users)
             .values({
                 username,
-                passwordHash
-            })
-            .returning();
-
-        await db.insert(profiles).values({
-            userId: newUser.id,
-            role
-        });
+                passwordHash,
+                role: role as "admin" | "participant"
+            });
 
         return redirect("/dashboard/manage-users");
     }
@@ -213,7 +202,7 @@ export default function ManageUsersPage() {
                     </div>
 
                     <div>
-                        {user.profile?.role}
+                        {user.role}
                     </div>
 
                     <Form method="post">
