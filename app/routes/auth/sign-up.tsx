@@ -4,10 +4,6 @@ import {
 import bcrypt from "bcryptjs";
 
 import {
-    eq 
-} from "drizzle-orm";
-
-import {
     db 
 } from "../../database/db.server";
 import {
@@ -25,45 +21,53 @@ export async function action({
 
     const username = String(formData.get("username"));
     const password = String(formData.get("password"));
-    console.log(username);
-    const user = await db.query.users.findFirst({
-        where: eq(users.username, username)
-    });
 
-    if (!user) {
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
         return {
-            error: "Invalid credentials"
+            error: "Invalid username"
         };
     }
 
-    const valid = await bcrypt.compare(
-        password,
-        user.passwordHash
-    );
-
-    if (!valid) {
+    if (password.length < 6) {
         return {
-            error: "Invalid credentials"
+            error: "Password too short"
         };
     }
 
-    return redirect("/dashboard/trades", {
-        headers: {
-            "Set-Cookie": createSession({
-                id: user.id,
-                username: user.username,
-                role: user.role
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    try {
+        const [
+            user
+        ] = await db.insert(users)
+            .values({
+                username,
+                passwordHash 
             })
-        }
-    });
+            .returning();
+
+        return redirect("/dashboard/trades", {
+            headers: {
+                "Set-Cookie": createSession({
+                    id: user.id,
+                    username: user.username,
+                    role: user.role
+                })
+            }
+        });
+    } catch (error) {
+        return {
+            error: "Username already exists" 
+        };
+    }
 }
 
-export default function LoginPage() {
+export default function SignupPage() {
     const actionData = useActionData() as any;
 
     return (
         <div>
-            <h1>Login</h1>
+            <h1>Sign Up</h1>
 
             {actionData?.error && (
                 <p>{actionData.error}</p>
@@ -83,7 +87,7 @@ export default function LoginPage() {
                 />
 
                 <button type="submit">
-                    Login
+                    Create Account
                 </button>
             </Form>
         </div>

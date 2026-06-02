@@ -8,6 +8,13 @@
       "when": 1780304029522,
       "tag": "0000_useful_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780377930688,
+      "tag": "0001_thick_switch",
+      "breakpoints": true
     }
   ]
 }

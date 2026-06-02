@@ -7,12 +7,13 @@ import {
 import {
     config
 } from "dotenv";
-
+import * as schema from "./schema.server";
 config({
     path: ".env"
 });
 
 const sql = neon(process.env.DATABASE_URL!);
 export const db = drizzle({
-    client: sql
+    client: sql,
+    schema
 });

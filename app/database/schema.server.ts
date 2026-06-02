@@ -72,7 +72,11 @@ export const users = pgTable("users", {
     })
         .defaultNow()
         .$onUpdateFn(() => sql`now()`)
+        .notNull(),
+    role: userRoleEnum("role")
         .notNull()
+        .default("participant"),
+    passwordHash: text("password_hash").notNull()
 });
 
 /* =========================
