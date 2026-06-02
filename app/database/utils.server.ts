@@ -108,5 +108,6 @@ async function getInstrumentDetails({
 }
 
 export {
-    getInstrumentDetails 
+    getInstrumentDetails,
+    doALogin 
 };

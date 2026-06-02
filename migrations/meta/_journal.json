@@ -15,6 +15,13 @@
       "when": 1780377930688,
       "tag": "0001_thick_switch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780387253478,
+      "tag": "0002_curly_randall_flagg",
+      "breakpoints": true
     }
   ]
 }

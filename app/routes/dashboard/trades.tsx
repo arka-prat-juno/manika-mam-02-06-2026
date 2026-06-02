@@ -17,6 +17,9 @@ import {
 } from "~/utils/auth.server";
 
 import styles from "./trades.module.css";
+import {
+    useEffect, useState 
+} from "react";
 
 export async function loader({
     request
@@ -78,6 +81,22 @@ export default function TradesPage({
         futures,
         options
     } = loaderData;
+    const [
+        liveData,
+        setLiveData
+    ] =useState(loaderData);
+    useEffect(() => {
+        const es = new EventSource("/dashboard/trades/live");
+
+        es.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            setLiveData(data);
+        };
+
+        return () => es.close();
+    }, [
+    ]);
 
     return (
         <div className={styles.page}>

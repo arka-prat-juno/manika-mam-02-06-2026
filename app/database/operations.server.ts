@@ -18,7 +18,6 @@ import {
 import {
     getInstrumentDetails
 } from "~/database/utils.server";
-const CURRENT_USER_ID = 1;
 
 type ActionResult = {
     errors?: Record<string, string>;
@@ -264,7 +263,9 @@ export async function addTrade(request: Request): Promise<ActionResult | Respons
                 optionType: data.optionType,
                 positionType: data.positionType,
                 quantity: data.quantity,
-                lotSize: 1,
+                lotSize: instrument?.lotSize,
+                exchangeInstrumentId:
+            instrument?.exchangeInstrumentId,
                 entryPrice: data.entryPrice.toFixed(2),
                 averagePrice: data.entryPrice.toFixed(2),
                 currentPrice: data.entryPrice.toFixed(2)
