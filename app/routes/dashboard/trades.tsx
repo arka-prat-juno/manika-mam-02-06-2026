@@ -35,23 +35,25 @@ export async function loader({
             : eq(positions.userId, user.id);
 
     const rows = await db.query.positions.findMany({
-    where:
+        where:
         user.role === "admin"
             ? gt(positions.quantity, 0)
-            : (table, { and }) =>
+            : (table, {
+                and 
+            }) =>
                 and(
                     eq(table.userId, user.id),
                     gt(table.quantity, 0)
                 ),
 
-    with: {
-        user: true
-    },
+        with: {
+            user: true
+        },
 
-    orderBy: [
-        desc(positions.createdAt)
-    ]
-});
+        orderBy: [
+            desc(positions.createdAt)
+        ]
+    });
 
     const futures = rows.filter((position) =>
         position.instrumentType ===
@@ -131,66 +133,62 @@ export default function TradesPage({
                             </thead>
 
                             <tbody>
-                                {futures.map(
-                                    (
-                                        trade: any
-                                    ) => (
-                                        <tr
-                                            key={
-                                                trade.id
+                                {futures.map((trade: any) => (
+                                    <tr
+                                        key={
+                                            trade.id
+                                        }
+                                    >
+                                        <td>
+                                            {
+                                                trade.script
                                             }
-                                        >
-                                            <td>
-                                                {
-                                                    trade.script
-                                                }
-                                            </td>
+                                        </td>
 
-                                            <td>
-                                                {
-                                                    trade.positionType
-                                                }
-                                            </td>
+                                        <td>
+                                            {
+                                                trade.positionType
+                                            }
+                                        </td>
 
-                                            <td>
-                                                {
-                                                    trade.quantity
-                                                }
-                                            </td>
+                                        <td>
+                                            {
+                                                trade.quantity
+                                            }
+                                        </td>
 
-                                            <td>
-                                                ₹
-                                                {
-                                                    trade.averagePrice
-                                                }
-                                            </td>
+                                        <td>
+                                            ₹
+                                            {
+                                                trade.averagePrice
+                                            }
+                                        </td>
 
-                                            <td>
-                                                ₹
-                                                {
-                                                    trade.currentPrice
-                                                }
-                                            </td>
+                                        <td>
+                                            ₹
+                                            {
+                                                trade.currentPrice
+                                            }
+                                        </td>
 
-                                            <td>
-                                                {
-                                                    trade.exchange
-                                                }
-                                            </td>
+                                        <td>
+                                            {
+                                                trade.exchange
+                                            }
+                                        </td>
 
-                                            {user.role ===
+                                        {user.role ===
                       "admin" && (
-                                                <td>
-                                                    {
-                                                        trade
-                                                            .user
-                                                            ?.username
-                                                    }
-                                                </td>
-                                            )}
-                                        </tr>
-                                    )
-                                )}
+                                            <td>
+                                                {
+                                                    trade
+                                                        .user
+                                                        ?.username
+                                                }
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -237,66 +235,62 @@ export default function TradesPage({
                             </thead>
 
                             <tbody>
-                                {options.map(
-                                    (
-                                        trade: any
-                                    ) => (
-                                        <tr
-                                            key={
-                                                trade.id
+                                {options.map((trade: any) => (
+                                    <tr
+                                        key={
+                                            trade.id
+                                        }
+                                    >
+                                        <td>
+                                            {
+                                                trade.script
                                             }
-                                        >
-                                            <td>
-                                                {
-                                                    trade.script
-                                                }
-                                            </td>
+                                        </td>
 
-                                            <td>
-                                                {
-                                                    trade.optionType
-                                                }
-                                            </td>
+                                        <td>
+                                            {
+                                                trade.optionType
+                                            }
+                                        </td>
 
-                                            <td>
+                                        <td>
                                                 
-                                                {
-                                                    trade.strikePrice
-                                                }
-                                            </td>
+                                            {
+                                                trade.strikePrice
+                                            }
+                                        </td>
 
-                                            <td>
-                                                {
-                                                    trade.quantity
-                                                }
-                                            </td>
+                                        <td>
+                                            {
+                                                trade.quantity
+                                            }
+                                        </td>
 
-                                            <td>
-                                                ₹
-                                                {
-                                                    trade.averagePrice
-                                                }
-                                            </td>
+                                        <td>
+                                            ₹
+                                            {
+                                                trade.averagePrice
+                                            }
+                                        </td>
 
-                                            <td>
-                                                {
-                                                    trade.expiry
-                                                }
-                                            </td>
+                                        <td>
+                                            {
+                                                trade.expiry
+                                            }
+                                        </td>
 
-                                            {user.role ===
+                                        {user.role ===
                       "admin" && (
-                                                <td>
-                                                    {
-                                                        trade
-                                                            .user
-                                                            ?.username
-                                                    }
-                                                </td>
-                                            )}
-                                        </tr>
-                                    )
-                                )}
+                                            <td>
+                                                {
+                                                    trade
+                                                        .user
+                                                        ?.username
+                                                }
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
