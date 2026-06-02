@@ -4,6 +4,7 @@ import {
 import {
     eq, and, isNull 
 } from "drizzle-orm";
+
 import {
     db 
 } from "./db.server";
@@ -11,43 +12,118 @@ import {
     positions, trades 
 } from "./schema.server";
 
-const CURRENT_USER_ID = 1; // hardcoded for now
+const CURRENT_USER_ID = 1;
 
-/* =====================================================
-   Find an existing position matching the instrument
-===================================================== */
+type ActionResult = {
+    errors?: Record<string, string>;
+    values?: Record<string, string>;
+};
 
-async function findMatchingPosition({
-    userId,
-    exchange,
-    instrumentType,
-    script,
-    expiry,
-    positionType,
-    strikePrice,
-    optionType
-}: {
-    userId: number;
+type TradeFormData = {
     exchange: "NSE" | "BSE";
     instrumentType: "FUTURE" | "OPTIONS";
     script: string;
     expiry: string;
     positionType: "LONG" | "SHORT";
+    quantity: number;
+    entryPrice: number;
     strikePrice: string | null;
     optionType: "CE" | "PE" | null;
-}) {
+};
+
+function parseTradeForm(formData: FormData): TradeFormData {
+    const instrumentType = formData.get("instrument_type") as TradeFormData["instrumentType"];
+
+    return {
+        exchange: formData.get("exchange") as TradeFormData["exchange"],
+
+        instrumentType,
+
+        script: String(formData.get("script") || "")
+            .trim()
+            .toUpperCase(),
+
+        expiry: String(formData.get("expiry") || ""),
+
+        positionType: formData.get("position_type") as TradeFormData["positionType"],
+
+        quantity: Number(formData.get("quantity")),
+
+        entryPrice: Number(formData.get("entry_price")),
+
+        strikePrice:
+      instrumentType === "OPTIONS"
+          ? Number(formData.get("strike_price")).toFixed(2)
+          : null,
+
+        optionType:
+      instrumentType === "OPTIONS"
+          ? (formData.get("option_type") as "CE" | "PE")
+          : null
+    };
+}
+
+function validateTrade(data: TradeFormData) {
+    const errors: Record<string, string> = {
+    };
+
+    if (!data.exchange) {
+        errors.exchange = "Exchange is required";
+    }
+
+    if (!data.instrumentType) {
+        errors.instrumentType = "Instrument type is required";
+    }
+
+    if (!data.script) {
+        errors.script = "Stock symbol is required";
+    }
+
+    if (!data.expiry) {
+        errors.expiry = "Expiry date is required";
+    }
+
+    if (!data.positionType) {
+        errors.positionType = "Position type is required";
+    }
+
+    if (data.quantity <= 0 || Number.isNaN(data.quantity)) {
+        errors.quantity = "Quantity must be greater than 0";
+    }
+
+    if (data.entryPrice <= 0 || Number.isNaN(data.entryPrice)) {
+        errors.entryPrice = "Entry price must be greater than 0";
+    }
+
+    if (data.instrumentType === "OPTIONS") {
+        if (!data.strikePrice) {
+            errors.strikePrice = "Strike price is required";
+        }
+
+        if (!data.optionType) {
+            errors.optionType = "Option type is required";
+        }
+    }
+
+    return errors;
+}
+
+async function findMatchingPosition(
+    userId: number,
+    data: TradeFormData
+) {
     const conditions = [
         eq(positions.userId, userId),
-        eq(positions.exchange, exchange),
-        eq(positions.instrumentType, instrumentType),
-        eq(positions.script, script.toUpperCase()),
-        eq(positions.expiry, expiry),
-        eq(positions.positionType, positionType)
+        eq(positions.exchange, data.exchange),
+        eq(positions.instrumentType, data.instrumentType),
+        eq(positions.script, data.script),
+        eq(positions.expiry, data.expiry),
+        eq(positions.positionType, data.positionType)
     ];
 
-    if (instrumentType === "OPTIONS") {
-        conditions.push(eq(positions.strikePrice, strikePrice!));
-        conditions.push(eq(positions.optionType, optionType!));
+    if (data.instrumentType === "OPTIONS") {
+        conditions.push(eq(positions.strikePrice, data.strikePrice!));
+        conditions.push(eq(positions.optionType, data.optionType!));
     } else {
         conditions.push(isNull(positions.strikePrice));
         conditions.push(isNull(positions.optionType));
@@ -62,10 +138,6 @@ async function findMatchingPosition({
     return rows[0] ?? null;
 }
 
-/* =====================================================
-   Compute updated position state after a new trade
-===================================================== */
-
 function computeUpdatedPosition(
     existing: {
         quantity: number;
@@ -79,27 +151,30 @@ function computeUpdatedPosition(
     }
 ) {
     const prevQty = existing.quantity;
+
     const prevAvg = existing.averagePrice
         ? Number(existing.averagePrice)
         : trade.price;
 
-    // Same direction → weighted average, add quantities
     if (existing.positionType === trade.positionType) {
-        const newQty = prevQty + trade.quantity;
-        const newAvg =
-            (prevAvg * prevQty + trade.price * trade.quantity) / newQty;
+        const quantity = prevQty + trade.quantity;
+
+        const averagePrice =
+            (
+                (prevAvg * prevQty +
+          trade.price * trade.quantity) /
+        quantity
+            ).toFixed(2);
 
         return {
-            quantity: newQty,
-            averagePrice: newAvg.toFixed(2),
+            quantity,
+            averagePrice,
             currentPrice: trade.price.toFixed(2),
             positionType: existing.positionType
         };
     }
 
-    // Opposite direction → reduce or flip
     if (trade.quantity < prevQty) {
-    // Partial close — quantity shrinks, avg stays
         return {
             quantity: prevQty - trade.quantity,
             averagePrice: prevAvg.toFixed(2),
@@ -109,7 +184,6 @@ function computeUpdatedPosition(
     }
 
     if (trade.quantity === prevQty) {
-    // Full close — position goes to 0
         return {
             quantity: 0,
             averagePrice: "0.00",
@@ -118,129 +192,81 @@ function computeUpdatedPosition(
         };
     }
 
-    // Flip — trade qty exceeds existing, net flips direction
-    const flippedQty = trade.quantity - prevQty;
     return {
-        quantity: flippedQty,
+        quantity: trade.quantity - prevQty,
         averagePrice: trade.price.toFixed(2),
         currentPrice: trade.price.toFixed(2),
         positionType: trade.positionType
     };
 }
 
-/* =====================================================
-   Public: addTrade
-===================================================== */
-
-export async function addTrade(request: Request) {
-    const userId = CURRENT_USER_ID;
+export async function addTrade(request: Request): Promise<ActionResult | Response> {
     const formData = await request.formData();
 
-    // --- parse fields ---
-    const exchange = formData.get("exchange") as "NSE" | "BSE";
-    const instrumentType = formData.get("instrument_type") as "FUTURE" | "OPTIONS";
-    const script = (formData.get("script") as string).toUpperCase().trim();
-    const expiry = formData.get("expiry") as string;
-    const positionType = formData.get("position_type") as "LONG" | "SHORT";
-    const quantity = Number(formData.get("quantity"));
-    const entryPrice = Number(formData.get("entry_price"));
+    const data = parseTradeForm(formData);
 
-    const strikePrice =
-        instrumentType === "OPTIONS" && formData.get("strike_price")
-            ? Number(formData.get("strike_price")).toFixed(2)
-            : null;
+    const errors = validateTrade(data);
 
-    const optionType =
-        instrumentType === "OPTIONS"
-            ? (formData.get("option_type") as "CE" | "PE")
-            : null;
-
-    // --- validate ---
-    if (!exchange || !instrumentType || !script || !expiry || !positionType) {
-        throw new Response("Missing required fields", {
-            status: 400 
-        });
-    }
-    if (quantity <= 0 || entryPrice <= 0) {
-        throw new Response("Quantity and price must be positive", {
-            status: 400 
-        });
-    }
-    if (instrumentType === "OPTIONS" && (!strikePrice || !optionType)) {
-        throw new Response("Options require strike price and option type", {
-            status: 400 
-        });
+    if (Object.keys(errors).length > 0) {
+        return {
+            errors,
+            values: Object.fromEntries(formData) as Record<string, string>
+        };
     }
 
-    // --- find or create position ---
-    const existing = await findMatchingPosition({
-        userId,
-        exchange,
-        instrumentType,
-        script,
-        expiry,
-        positionType,
-        strikePrice,
-        optionType
-    });
+    const existing = await findMatchingPosition(
+        CURRENT_USER_ID,
+        data
+    );
 
     let positionId: number;
 
     if (existing) {
-    // update existing position
         const updated = computeUpdatedPosition(existing, {
-            quantity,
-            price: entryPrice,
-            positionType
+            quantity: data.quantity,
+            price: data.entryPrice,
+            positionType: data.positionType
         });
 
         await db
             .update(positions)
-            .set({
-                quantity: updated.quantity,
-                averagePrice: updated.averagePrice,
-                currentPrice: updated.currentPrice,
-                positionType: updated.positionType
-            })
+            .set(updated)
             .where(eq(positions.id, existing.id));
 
         positionId = existing.id;
     } else {
-    // create new position
         const inserted = await db
             .insert(positions)
             .values({
-                userId,
-                exchange,
-                instrumentType,
-                script,
-                expiry,
-                strikePrice,
-                optionType,
-                positionType,
-                quantity,
+                userId: CURRENT_USER_ID,
+                exchange: data.exchange,
+                instrumentType: data.instrumentType,
+                script: data.script,
+                expiry: data.expiry,
+                strikePrice: data.strikePrice,
+                optionType: data.optionType,
+                positionType: data.positionType,
+                quantity: data.quantity,
                 lotSize: 1,
-                entryPrice: entryPrice.toFixed(2),
-                averagePrice: entryPrice.toFixed(2),
-                currentPrice: entryPrice.toFixed(2)
+                entryPrice: data.entryPrice.toFixed(2),
+                averagePrice: data.entryPrice.toFixed(2),
+                currentPrice: data.entryPrice.toFixed(2)
             })
             .returning({
-                id: positions.id 
+                id: positions.id
             });
 
         positionId = inserted[0].id;
     }
 
-    // --- insert trade record ---
     await db.insert(trades).values({
         positionId,
-        userId,
+        userId: CURRENT_USER_ID,
         tradeType: "ADD",
-        quantity,
-        price: entryPrice.toFixed(2),
+        quantity: data.quantity,
+        price: data.entryPrice.toFixed(2),
         notes: ""
     });
 
-    // --- redirect ---
     return redirect("/dashboard/trades");
 }

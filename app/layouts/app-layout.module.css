@@ -1,8 +1,11 @@
+/* 1st - Cheerful Light Mode */
+
 .container {
   min-height: 100vh;
-
-  background: #030712;
-  color: white;
+  /* Soft, warm white background */
+  background: #f9fafb; 
+  /* Deep slate for high contrast and readability */
+  color: #1f2937; 
 }
 
 .main {

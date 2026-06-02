@@ -1,3 +1,5 @@
+/* 3rd - Cheerful Light Mode */
+
 .navbar {
   height: 64px;
 
@@ -7,25 +9,35 @@
 
   padding: 0 24px;
 
-  background: #111827;
-  border-bottom: 1px solid #1f2937;
+  /* Crisp white background */
+  background: #ffffff;
+  /* Very light grey border for subtle definition */
+  border-bottom: 1px solid #f3f4f6;
+  /* Added a soft shadow to make it feel light and elevated */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .logo {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  /* Using a deep Navy for the logo to keep it grounded */
+  color: #1e1b4b;
 }
 
 .links {
   display: flex;
-  gap: 20px;
+  gap: 24px; /* Increased slightly for a "breezy" feel */
 }
 
 .link {
-  color: #d1d5db;
+  /* Soft medium-grey for a relaxed look */
+  color: #6b7280;
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
 .link:hover {
-  color: white;
+  /* Changes to a bright, cheerful blue on hover */
+  color: #3b82f6;
 }
