@@ -9,7 +9,8 @@ import {
 } from "../../database/db.server";
 
 import {
-    positions
+    positions,
+    trades
 } from "../../database/schema.server";
 
 import {
@@ -20,6 +21,9 @@ import styles from "./trades.module.css";
 import {
     useEffect, useState 
 } from "react";
+import {
+    Form 
+} from "react-router";
 
 export async function loader({
     request
@@ -70,6 +74,146 @@ export async function loader({
         user,
         futures,
         options
+    };
+}
+
+/* =========================
+   ACTION
+========================= */
+
+export async function action({
+    request
+}: Route.ActionArgs) {
+
+    const currentUser =
+        await requireUser(request);
+
+    const formData =
+        await request.formData();
+
+    const positionId =
+        Number(formData.get("positionId"));
+
+    const lots =
+        Number(formData.get("lots"));
+
+    const exitPrice =
+        Number(formData.get("exitPrice"));
+
+    /*
+    =========================
+    FETCH POSITION
+    =========================
+    */
+
+    const position =
+        await db.query.positions.findFirst({
+            where: eq(
+                positions.id,
+                positionId
+            )
+        });
+
+    if (!position) {
+        throw new Error("Position not found");
+    }
+
+    /*
+    =========================
+    SECURITY CHECK
+    =========================
+    */
+
+    if (
+        currentUser.role !== "admin" &&
+        position.userId !== currentUser.id
+    ) {
+        throw new Error("Unauthorized");
+    }
+
+    /*
+    =========================
+    FULL EXIT
+    =========================
+    */
+
+    if (lots >= position.quantity) {
+
+        await db
+            .update(positions)
+            .set({
+                quantity: 0
+            })
+            .where(eq(
+                positions.id,
+                position.id
+            ));
+
+        await db.insert(trades).values({
+            positionId:
+                position.id,
+
+            userId:
+                currentUser.id,
+
+            tradeType:
+                "EXIT",
+
+            quantity:
+                position.quantity,
+
+            price:
+                exitPrice.toFixed(2),
+
+            notes:
+                "Full exit"
+        });
+
+        return {
+            success: true
+        };
+    }
+
+    /*
+    =========================
+    PARTIAL EXIT
+    =========================
+    */
+
+    await db
+        .update(positions)
+        .set({
+            quantity:
+                position.quantity -
+                lots
+        })
+        .where(eq(
+            positions.id,
+            position.id
+        ));
+
+    await db.insert(trades).values({
+        positionId:
+            position.id,
+
+        userId:
+            currentUser.id,
+
+        tradeType:
+            "EXIT",
+
+        quantity:
+            lots,
+
+        price:
+            exitPrice.toFixed(2),
+
+        notes:
+            `Partial exit ${lots}`
+    });
+
+    return {
+        success: true
     };
 }
 
@@ -214,6 +358,97 @@ export default function TradesPage({
                                                 }
                                             </td>
                                         )}
+                                        <td>
+                                            <button
+                                                className={
+                                                    styles.squareOffBtn
+                                                }
+                                                onClick={() => {
+                                                    (
+                                                        document.getElementById(`dialog-${trade.id}`) as HTMLDialogElement
+                                                    ).showModal();
+                                                }}
+                                            >
+                                                Square Off
+                                            </button>
+
+                                            <dialog
+                                                id={`dialog-${trade.id}`}
+                                                className={styles.dialog}
+                                            >
+
+                                                <Form method="post">
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="positionId"
+                                                        value={trade.id}
+                                                    />
+
+                                                    <h3>
+                                                        Square Off
+                                                    </h3>
+
+                                                    <div
+                                                        className={styles.field}
+                                                    >
+                                                        <label>
+                                                            Lots
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            name="lots"
+                                                            required
+                                                            min="1"
+                                                            max={
+                                                                trade.quantity
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    <div
+                                                        className={styles.field}
+                                                    >
+                                                        <label>
+                                                            Exit Price
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            name="exitPrice"
+                                                            required
+                                                        />
+                                                    </div>
+
+                                                    <div
+                                                        className={
+                                                            styles.dialogActions
+                                                        }
+                                                    >
+                                                        <button
+                                                            type="submit"
+                                                        >
+                                                            Submit
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                (
+                                                                    document.getElementById(`dialog-${trade.id}`) as HTMLDialogElement
+                                                                ).close();
+                                                            }}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+
+                                                </Form>
+
+                                            </dialog>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -316,6 +551,98 @@ export default function TradesPage({
                                                 }
                                             </td>
                                         )}
+
+                                        <td>
+                                            <button
+                                                className={
+                                                    styles.squareOffBtn
+                                                }
+                                                onClick={() => {
+                                                    (
+                                                        document.getElementById(`dialog-${trade.id}`) as HTMLDialogElement
+                                                    ).showModal();
+                                                }}
+                                            >
+                                                Square Off
+                                            </button>
+
+                                            <dialog
+                                                id={`dialog-${trade.id}`}
+                                                className={styles.dialog}
+                                            >
+
+                                                <Form method="post">
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="positionId"
+                                                        value={trade.id}
+                                                    />
+
+                                                    <h3>
+                                                        Square Off
+                                                    </h3>
+
+                                                    <div
+                                                        className={styles.field}
+                                                    >
+                                                        <label>
+                                                            Lots
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            name="lots"
+                                                            required
+                                                            min="1"
+                                                            max={
+                                                                trade.quantity
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    <div
+                                                        className={styles.field}
+                                                    >
+                                                        <label>
+                                                            Exit Price
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            name="exitPrice"
+                                                            required
+                                                        />
+                                                    </div>
+
+                                                    <div
+                                                        className={
+                                                            styles.dialogActions
+                                                        }
+                                                    >
+                                                        <button
+                                                            type="submit"
+                                                        >
+                                                            Submit
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                (
+                                                                    document.getElementById(`dialog-${trade.id}`) as HTMLDialogElement
+                                                                ).close();
+                                                            }}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+
+                                                </Form>
+
+                                            </dialog>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
