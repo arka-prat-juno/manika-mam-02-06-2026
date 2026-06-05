@@ -1,13 +1,71 @@
-// app/routes/dashboard/mtm.tsx
+import type {
+    Route
+} from "./+types/mtm";
 
-export default function MTMPage() {
+import {
+    calculatePnL
+} from "~/database/utils.server";
+
+/* =========================
+   LOADER
+========================= */
+
+export async function loader({
+    request
+}: Route.LoaderArgs) {
+    const data =
+        await calculatePnL(request);
+
+    return data;
+}
+
+/* =========================
+   COMPONENT
+========================= */
+
+export default function MTM({
+    loaderData
+}: Route.ComponentProps) {
+    const {
+        positions,
+        totalPnL
+    } = loaderData;
+
     return (
         <div>
-            <h2>MTM</h2>
+            <h1>
+                MTM
+            </h1>
 
-            <p>
-                Waiting for live prices...
-            </p>
+            <h2>
+                Total PnL:
+                {" "}
+                {totalPnL.toFixed(2)}
+            </h2>
+
+            <div>
+                {positions.map((position) => (
+                    <div
+                        key={position.id}
+                    >
+                        <p>
+                            {position.script}
+                        </p>
+
+                        <p>
+                            Qty:
+                            {" "}
+                            {position.quantity}
+                        </p>
+
+                        <p>
+                            PnL:
+                            {" "}
+                            {position.pnl.toFixed(2)}
+                        </p>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }

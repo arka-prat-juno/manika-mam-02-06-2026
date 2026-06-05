@@ -1,3 +1,16 @@
+import {
+    and, eq, gt 
+} from "drizzle-orm";
+import {
+    requireUser 
+} from "~/utils/auth.server";
+import {
+    positions 
+} from "./schema.server";
+import {
+    db 
+} from "./db.server";
+
 async function doALogin() {
     const BASE_URL = "http://xts.achintya.net.in:3000/apimarketdata";
     const XTS_APP_KEY = "ddc9ca260dee67556bd436";
@@ -107,7 +120,188 @@ async function getInstrumentDetails({
     };
 }
 
+function isMarketHoursIST() {
+    const now = new Date();
+
+    const istTime = new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    }).format(now);
+
+    const [
+        hour,
+        minute
+    ] = istTime
+        .split(":")
+        .map(Number);
+
+    const totalMinutes = hour * 60 + minute;
+
+    // 9:00 AM -> 4:30 PM
+    return totalMinutes >= 540 && totalMinutes < 990;
+}
+
+async function calculatePnL(request: Request) {
+    /*
+    =========================
+    GET CURRENT USER
+    =========================
+    */
+
+    const currentUser =
+        await requireUser(request);
+
+    /*
+    =========================
+    ADMIN -> ALL POSITIONS
+    USER  -> OWN POSITIONS
+    =========================
+    */
+
+    const whereClause =
+        currentUser.role === "admin"
+            ? gt(
+                positions.quantity,
+                0
+            )
+            : and(
+                eq(
+                    positions.userId,
+                    currentUser.id
+                ),
+
+                gt(
+                    positions.quantity,
+                    0
+                )
+            );
+
+    /*
+    =========================
+    FETCH POSITIONS
+    =========================
+    */
+
+    const activePositions =
+        await db.query.positions.findMany({
+            where: whereClause,
+
+            with: {
+                user: true
+            }
+        });
+
+    /*
+    =========================
+    MARKET HOURS CHECK
+    =========================
+    */
+
+    const isLiveMarket =
+        isMarketHoursIST();
+
+    /*
+    =========================
+    CALCULATE PNL
+    =========================
+    */
+
+    const positionsWithPnL =
+        activePositions.map((position) => {
+            const previousSettled =
+                Number(position.previousSettledPrice);
+
+            const settled =
+                Number(position.settledPrice);
+
+            const current =
+                Number(position.currentPrice ?? 0);
+
+            let diff = 0;
+
+            /*
+                =========================
+                MARKET HOURS
+                current - prev settled
+                =========================
+                */
+
+            if (isLiveMarket) {
+                diff =
+                    current -
+                        previousSettled;
+            }
+
+            /*
+                =========================
+                AFTER MARKET
+                settled - prev settled
+                =========================
+                */
+
+            else {
+                diff =
+                    settled -
+                        previousSettled;
+            }
+
+            /*
+                =========================
+                REVERSE FOR SHORT
+                =========================
+                */
+
+            if (
+                position.positionType ===
+                    "SHORT"
+            ) {
+                diff *= -1;
+            }
+
+            /*
+                =========================
+                FINAL PNL
+                =========================
+                */
+
+            const pnl =
+                diff *
+                    position.quantity;
+
+            return {
+                ...position,
+
+                pnl
+            };
+        });
+
+    /*
+    =========================
+    TOTAL PNL
+    =========================
+    */
+
+    const totalPnL =
+        positionsWithPnL.reduce(
+            (acc, position) =>
+                acc + position.pnl,
+
+            0
+        );
+
+    return {
+        positions:
+            positionsWithPnL,
+
+        totalPnL
+    };
+}
+
 export {
     getInstrumentDetails,
-    doALogin 
+    doALogin,
+    isMarketHoursIST,
+    calculatePnL 
 };
