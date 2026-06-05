@@ -5,6 +5,10 @@ import type {
 import {
     calculatePnL
 } from "~/database/utils.server";
+import {
+    useRevalidator
+} from "react-router";
+import { useEffect } from "react";
 
 /* =========================
    LOADER
@@ -30,6 +34,27 @@ export default function MTM({
         positions,
         totalPnL
     } = loaderData;
+    const revalidator =
+        useRevalidator();
+
+
+        /*
+    =========================
+    AUTO REFRESH
+    =========================
+    */
+
+    useEffect(() => {
+        const interval =
+            setInterval(() => {
+                revalidator.revalidate();
+            }, 10000);
+
+        return () =>
+            clearInterval(interval);
+    }, [
+        revalidator
+    ]);
 
     return (
         <div>
