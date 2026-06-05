@@ -101,3 +101,47 @@
 
     color: #64748b;
 }
+
+
+.squareOffBtn {
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+}
+
+.squareOffBtn:hover {
+    background: #1d4ed8;
+}
+
+.dialog {
+    border: none;
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 320px;
+}
+
+.dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.field input {
+    padding: 0.7rem;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
+
+.dialogActions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}

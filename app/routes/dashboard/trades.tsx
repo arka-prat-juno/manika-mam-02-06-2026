@@ -22,7 +22,8 @@ import {
     useEffect, useState 
 } from "react";
 import {
-    Form 
+    Form, 
+    useNavigation
 } from "react-router";
 
 export async function loader({
@@ -237,6 +238,9 @@ export default function TradesPage({
 
     const options =
         liveData.options;
+
+    const navigation =
+        useNavigation();
     useEffect(() => {
         const es = new EventSource("/dashboard/trades/live");
 
@@ -248,6 +252,33 @@ export default function TradesPage({
 
         return () => es.close();
     }, [
+    ]);
+    useEffect(() => {
+
+        /*
+    =========================
+    CLOSE DIALOGS
+    AFTER ACTION
+    =========================
+    */
+
+        if (
+            navigation.state ===
+        "idle"
+        ) {
+
+            const dialogs =
+                document.querySelectorAll("dialog");
+
+            dialogs.forEach((dialog) => {
+                (
+                    dialog as HTMLDialogElement
+                ).close();
+            });
+        }
+
+    }, [
+        navigation.state
     ]);
 
     return (
