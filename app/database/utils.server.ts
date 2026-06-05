@@ -1,11 +1,13 @@
 import {
-    and, eq, gt 
+    and, eq, gt, 
+    gte
 } from "drizzle-orm";
 import {
     requireUser 
 } from "~/utils/auth.server";
 import {
-    positions 
+    positions, 
+    trades
 } from "./schema.server";
 import {
     db 
@@ -143,25 +145,48 @@ function isMarketHoursIST() {
     return totalMinutes >= 540 && totalMinutes < 990;
 }
 
+/*
+=========================
+TODAY START (IST)
+=========================
+*/
+
+function getTodayStartIST() {
+    const now = new Date();
+
+    const istDate =
+        new Date(now.toLocaleString(
+            "en-US",
+            {
+                timeZone:
+                        "Asia/Kolkata"
+            }
+        ));
+
+    istDate.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+    return istDate;
+}
+
 async function calculatePnL(request: Request) {
-    /*
-    =========================
-    GET CURRENT USER
-    =========================
-    */
 
     const currentUser =
         await requireUser(request);
 
     /*
     =========================
-    ADMIN -> ALL POSITIONS
-    USER  -> OWN POSITIONS
+    USER FILTER
     =========================
     */
 
-    const whereClause =
-        currentUser.role === "admin"
+    const activeWhereClause =
+        currentUser.role ===
+        "admin"
             ? gt(
                 positions.quantity,
                 0
@@ -180,13 +205,14 @@ async function calculatePnL(request: Request) {
 
     /*
     =========================
-    FETCH POSITIONS
+    ACTIVE POSITIONS
     =========================
     */
 
     const activePositions =
         await db.query.positions.findMany({
-            where: whereClause,
+            where:
+                activeWhereClause,
 
             with: {
                 user: true
@@ -204,7 +230,54 @@ async function calculatePnL(request: Request) {
 
     /*
     =========================
-    MARKET HOURS CHECK
+    TODAY EXIT TRADES
+    =========================
+    */
+
+    const todayStart =
+        getTodayStartIST();
+
+    const exitTrades =
+        await db.query.trades.findMany({
+            where:
+                currentUser.role ===
+                "admin"
+                    ? and(
+                        eq(
+                            trades.tradeType,
+                            "EXIT"
+                        ),
+
+                        gte(
+                            trades.createdAt,
+                            todayStart
+                        )
+                    )
+                    : and(
+                        eq(
+                            trades.tradeType,
+                            "EXIT"
+                        ),
+
+                        eq(
+                            trades.userId,
+                            currentUser.id
+                        ),
+
+                        gte(
+                            trades.createdAt,
+                            todayStart
+                        )
+                    ),
+
+            with: {
+                position: true
+            }
+        });
+
+    /*
+    =========================
+    MARKET HOURS
     =========================
     */
 
@@ -213,12 +286,13 @@ async function calculatePnL(request: Request) {
 
     /*
     =========================
-    CALCULATE PNL
+    ACTIVE POSITION PNL
     =========================
     */
 
-    const positionsWithPnL =
+    const activePnL =
         activePositions.map((position) => {
+
             const previousSettled =
                 Number(position.previousSettledPrice);
 
@@ -226,41 +300,22 @@ async function calculatePnL(request: Request) {
                 Number(position.settledPrice);
 
             const current =
-                Number(position.currentPrice ?? 0);
+                Number(position.currentPrice ??
+                        0);
 
             let diff = 0;
 
-            /*
-                =========================
-                MARKET HOURS
-                current - prev settled
-                =========================
-                */
-
-            if (isLiveMarket) {
+            if (
+                isLiveMarket
+            ) {
                 diff =
                     current -
                         previousSettled;
-            }
-
-            /*
-                =========================
-                AFTER MARKET
-                settled - prev settled
-                =========================
-                */
-
-            else {
+            } else {
                 diff =
                     settled -
                         previousSettled;
             }
-
-            /*
-                =========================
-                REVERSE FOR SHORT
-                =========================
-                */
 
             if (
                 position.positionType ===
@@ -271,38 +326,113 @@ async function calculatePnL(request: Request) {
 
             /*
                 =========================
-                FINAL PNL
+                MULTIPLY LOT SIZE
                 =========================
                 */
 
             const pnl =
                 diff *
-                    position.quantity;
+                    position.quantity *
+                    position.lotSize;
 
             return {
                 ...position,
 
-                pnl
+                pnl,
+
+                source:
+                        "ACTIVE"
             };
         });
 
     /*
     =========================
-    TOTAL PNL
+    EXITED POSITION PNL
+    =========================
+    */
+
+    const exitedPnL =
+        exitTrades.map((trade) => {
+
+            const position =
+                trade.position;
+
+            const previousSettled =
+                Number(position.previousSettledPrice);
+
+            const exitPrice =
+                Number(trade.price);
+
+            let diff =
+                exitPrice -
+                    previousSettled;
+
+            /*
+                =========================
+                SHORT REVERSE
+                =========================
+                */
+
+            if (
+                position.positionType ===
+                    "SHORT"
+            ) {
+                diff *= -1;
+            }
+
+            const pnl =
+                diff *
+                    trade.quantity *
+                    position.lotSize;
+
+            return {
+                ...position,
+
+                pnl,
+
+                exitedQuantity:
+                        trade.quantity,
+
+                exitPrice,
+
+                source:
+                        "EXIT"
+            };
+        });
+
+    /*
+    =========================
+    MERGE
+    =========================
+    */
+
+    const allPositions =
+        [
+            ...activePnL,
+            ...exitedPnL
+        ];
+
+    /*
+    =========================
+    TOTAL
     =========================
     */
 
     const totalPnL =
-        positionsWithPnL.reduce(
-            (acc, position) =>
-                acc + position.pnl,
+        allPositions.reduce(
+            (
+                acc,
+                position
+            ) =>
+                acc +
+                position.pnl,
 
             0
         );
 
     return {
         positions:
-            positionsWithPnL,
+            allPositions,
 
         totalPnL
     };
