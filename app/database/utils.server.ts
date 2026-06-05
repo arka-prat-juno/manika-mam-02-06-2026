@@ -185,13 +185,20 @@ async function calculatePnL(request: Request) {
     */
 
     const activePositions =
-        await db.query.positions.findMany({
-            where: whereClause,
+    await db.query.positions.findMany({
+        where: whereClause,
 
-            with: {
-                user: true
-            }
-        });
+        with: {
+            user: true
+        },
+
+        orderBy: (
+            positions,
+            { asc }
+        ) => [
+            asc(positions.id)
+        ]
+    });
 
     /*
     =========================

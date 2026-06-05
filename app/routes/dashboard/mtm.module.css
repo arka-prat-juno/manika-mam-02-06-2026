@@ -1,8 +1,8 @@
 .container {
     padding: 2rem;
-    color: white;
     min-height: 100vh;
-    background: #0f172a;
+    background: #f8fbff;
+    color: #0f172a;
 }
 
 .header {
@@ -15,20 +15,25 @@
 .header h1 {
     font-size: 2rem;
     font-weight: 700;
+    color: #0f172a;
 }
 
 .totalPnL {
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    font-size: 1.25rem;
+    padding: 0.9rem 1.4rem;
+    border-radius: 14px;
+    font-size: 1.2rem;
     font-weight: 700;
+    background: white;
+    border: 2px solid #dbeafe;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
 }
 
 .tableWrapper {
     overflow-x: auto;
-    border-radius: 16px;
-    border: 1px solid #1e293b;
-    background: #111827;
+    border-radius: 18px;
+    background: white;
+    border: 1px solid #dbeafe;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.08);
 }
 
 .table {
@@ -37,38 +42,38 @@
 }
 
 .table thead {
-    background: #1e293b;
+    background: #eff6ff;
 }
 
 .table th {
     padding: 1rem;
     text-align: left;
     font-size: 0.9rem;
-    font-weight: 600;
-    color: #cbd5e1;
-    border-bottom: 1px solid #334155;
+    font-weight: 700;
+    color: #1e3a8a;
+    border-bottom: 1px solid #dbeafe;
 }
 
 .table td {
     padding: 1rem;
-    border-bottom: 1px solid #1e293b;
     font-size: 0.95rem;
+    border-bottom: 1px solid #eff6ff;
 }
 
 .table tbody tr {
-    transition: background 0.2s ease;
+    transition: background 0.15s ease;
 }
 
 .table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: #f0f9ff;
 }
 
 .profit {
-    color: #22c55e;
+    color: #16a34a;
     font-weight: 700;
 }
 
 .loss {
-    color: #ef4444;
+    color: #dc2626;
     font-weight: 700;
 }
