@@ -5,10 +5,16 @@ import type {
 import {
     calculatePnL
 } from "~/database/utils.server";
+
 import {
     useRevalidator
 } from "react-router";
-import { useEffect } from "react";
+
+import {
+    useEffect
+} from "react";
+
+import styles from "./mtm.module.css";
 
 /* =========================
    LOADER
@@ -30,15 +36,16 @@ export async function loader({
 export default function MTM({
     loaderData
 }: Route.ComponentProps) {
+
     const {
         positions,
         totalPnL
     } = loaderData;
+
     const revalidator =
         useRevalidator();
 
-
-        /*
+    /*
     =========================
     AUTO REFRESH
     =========================
@@ -52,45 +59,122 @@ export default function MTM({
 
         return () =>
             clearInterval(interval);
+
     }, [
         revalidator
     ]);
 
     return (
-        <div>
-            <h1>
-                MTM
-            </h1>
+        <div className={styles.container}>
 
-            <h2>
-                Total PnL:
-                {" "}
-                {totalPnL.toFixed(2)}
-            </h2>
+            <div className={styles.header}>
+                <h1>
+                    MTM Dashboard
+                </h1>
 
-            <div>
-                {positions.map((position) => (
-                    <div
-                        key={position.id}
-                    >
-                        <p>
-                            {position.script}
-                        </p>
-
-                        <p>
-                            Qty:
-                            {" "}
-                            {position.quantity}
-                        </p>
-
-                        <p>
-                            PnL:
-                            {" "}
-                            {position.pnl.toFixed(2)}
-                        </p>
-                    </div>
-                ))}
+                <div
+                    className={`${styles.totalPnL} ${
+                        totalPnL >= 0
+                            ? styles.profit
+                            : styles.loss
+                    }`}
+                >
+                    ₹ {totalPnL.toFixed(2)}
+                </div>
             </div>
+
+            <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+
+                    <thead>
+                        <tr>
+                            <th>
+                                Script
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Qty
+                            </th>
+
+                            <th>
+                                Avg Price
+                            </th>
+
+                            <th>
+                                Current
+                            </th>
+
+                            <th>
+                                Prev Close
+                            </th>
+
+                            <th>
+                                PnL
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {positions.map((position) => (
+
+                            <tr
+                                key={position.id}
+                            >
+                                <td>
+                                    {position.script}
+                                </td>
+
+                                <td>
+                                    {position.positionType}
+                                </td>
+
+                                <td>
+                                    {position.quantity}
+                                </td>
+
+                                <td>
+                                    ₹ {
+                                        Number(position.averagePrice ??
+                                            0).toFixed(2)
+                                    }
+                                </td>
+
+                                <td>
+                                    ₹ {
+                                        Number(position.currentPrice ??
+                                            0).toFixed(2)
+                                    }
+                                </td>
+
+                                <td>
+                                    ₹ {
+                                        Number(position.previousSettledPrice).toFixed(2)
+                                    }
+                                </td>
+
+                                <td
+                                    className={
+                                        position.pnl >= 0
+                                            ? styles.profit
+                                            : styles.loss
+                                    }
+                                >
+                                    ₹ {
+                                        position.pnl.toFixed(2)
+                                    }
+                                </td>
+                            </tr>
+
+                        ))}
+                    </tbody>
+
+                </table>
+            </div>
+
         </div>
     );
 }
