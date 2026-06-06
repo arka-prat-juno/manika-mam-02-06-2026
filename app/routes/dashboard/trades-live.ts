@@ -258,7 +258,6 @@ export async function loader({
 
                             controller.enqueue(encoder.encode(`data: ${JSON.stringify({
                                 futures,
-
                                 options
                             })}\n\n`));
                         } catch (error) {

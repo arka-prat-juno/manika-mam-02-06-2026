@@ -116,8 +116,8 @@ export default function MTM({
                                 PnL
                             </th>
                             <th>
-    Status
-</th>
+                                Status
+                            </th>
                         </tr>
                     </thead>
 
@@ -171,12 +171,12 @@ export default function MTM({
                                     }
                                 </td>
                                 <td>
-    {
-        position.source === "EXIT"
-            ? "Closed"
-            : "Open"
-    }
-</td>
+                                    {
+                                        position.source === "EXIT"
+                                            ? "Closed"
+                                            : "Open"
+                                    }
+                                </td>
                             </tr>
 
                         ))}

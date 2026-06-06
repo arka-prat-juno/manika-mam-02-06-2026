@@ -6,6 +6,7 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+    // https://chatgpt.com/share/6a22b03c-8dc4-8324-9e28-8486beb6ed22
     layout("./layouts/app-layout.tsx", [
         index("./routes/home.tsx"),
 
@@ -23,5 +24,8 @@ export default [
 
     route("login", "./routes/auth/login.tsx"),
     route("logout", "./routes/auth/logout.tsx"),
-    route("sign-up", "./routes/auth/sign-up.tsx")
+    route("sign-up", "./routes/auth/sign-up.tsx"),
+
+    // https://reactrouter.com/start/framework/routing 
+    route("api/api-settlement", "./routes/api/settlement.ts")
 ] satisfies RouteConfig;
