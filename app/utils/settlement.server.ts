@@ -1,5 +1,6 @@
 import {
     and,
+    eq,
     gte,
     inArray,
     isNotNull
