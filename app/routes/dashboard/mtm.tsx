@@ -41,6 +41,9 @@ export default function MTM({
         positions,
         totalPnL
     } = loaderData;
+    const futures = positions.filter((p: any) => p.instrumentType === "FUTURE");
+
+    const options = positions.filter((p: any) => p.instrumentType === "OPTIONS");
 
     const revalidator =
         useRevalidator();
@@ -69,7 +72,7 @@ export default function MTM({
 
             <div className={styles.header}>
                 <h1>
-                    MTM Dashboard
+                    Stockwise Summary
                 </h1>
 
                 <div
@@ -83,105 +86,117 @@ export default function MTM({
                 </div>
             </div>
 
+            <h2 className={styles.sectionTitle}>Futures</h2>
+
             <div className={styles.tableWrapper}>
                 <table className={styles.table}>
-
                     <thead>
                         <tr>
-                            <th>
-                                Script
-                            </th>
-
-                            <th>
-                                Type
-                            </th>
-
-                            <th>
-                                Qty
-                            </th>
-
-                            <th>
-                                Avg Price
-                            </th>
-
-                            <th>
-                                Current
-                            </th>
-
-                            <th>
-                                Prev Close
-                            </th>
-
-                            <th>
-                                PnL
-                            </th>
-                            <th>
-                                Status
-                            </th>
+                            <th>Script</th>
+                            <th>Type</th>
+                            <th>Qty</th>
+                            <th>Avg Price</th>
+                            <th>Current</th>
+                            <th>Prev Close</th>
+                            <th>PnL</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {positions.map((position) => (
+                        {futures.map((position: any) => (
+                            <tr key={position.id}>
+                                <td>{position.script}</td>
 
-                            <tr
-                                key={position.id}
-                            >
-                                <td>
-                                    {position.script}
-                                </td>
+                                <td>{position.positionType}</td>
 
-                                <td>
-                                    {position.positionType}
-                                </td>
+                                <td>{position.quantity}</td>
 
-                                <td>
-                                    {position.quantity}
-                                </td>
+                                <td>₹{Number(position.averagePrice ?? 0).toFixed(2)}</td>
+
+                                <td>₹{Number(position.currentPrice ?? 0).toFixed(2)}</td>
 
                                 <td>
-                                    ₹ {
-                                        Number(position.averagePrice ??
-                                            0).toFixed(2)
-                                    }
-                                </td>
-
-                                <td>
-                                    ₹ {
-                                        Number(position.currentPrice ??
-                                            0).toFixed(2)
-                                    }
-                                </td>
-
-                                <td>
-                                    ₹ {
-                                        Number(position.previousSettledPrice).toFixed(2)
-                                    }
+                                    ₹{Number(position.previousSettledPrice ?? 0).toFixed(2)}
                                 </td>
 
                                 <td
                                     className={
-                                        position.pnl >= 0
-                                            ? styles.profit
-                                            : styles.loss
+                                        position.pnl >= 0 ? styles.profit : styles.loss
                                     }
                                 >
-                                    ₹ {
-                                        position.pnl.toFixed(2)
-                                    }
+                                    ₹{position.pnl.toFixed(2)}
                                 </td>
+
+                                <td>{position.expiry ?? "-"}</td>
+
                                 <td>
-                                    {
-                                        position.source === "EXIT"
-                                            ? "Closed"
-                                            : "Open"
-                                    }
+                                    {position.source === "EXIT" ? "Closed" : "Open"}
                                 </td>
                             </tr>
-
                         ))}
                     </tbody>
+                </table>
+            </div>
 
+            <h2 className={styles.sectionTitle}>Options</h2>
+
+            <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th>Script</th>
+                            <th>Type</th>
+                            <th>Strike</th>
+                            <th>Option</th>
+                            <th>Qty</th>
+                            <th>Avg Price</th>
+                            <th>Current</th>
+                            <th>Prev Close</th>
+                            <th>PnL</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {options.map((position: any) => (
+                            <tr key={position.id}>
+                                <td>{position.script}</td>
+
+                                <td>{position.positionType}</td>
+
+                                <td>{position.strikePrice ?? "-"}</td>
+
+                                <td>{position.optionType ?? "-"}</td>
+
+                                <td>{position.quantity}</td>
+
+                                <td>₹{Number(position.averagePrice ?? 0).toFixed(2)}</td>
+
+                                <td>₹{Number(position.currentPrice ?? 0).toFixed(2)}</td>
+
+                                <td>
+                                    ₹{Number(position.previousSettledPrice ?? 0).toFixed(2)}
+                                </td>
+
+                                <td
+                                    className={
+                                        position.pnl >= 0 ? styles.profit : styles.loss
+                                    }
+                                >
+                                    ₹{position.pnl.toFixed(2)}
+                                </td>
+
+                                <td>{position.expiry ?? "-"}</td>
+
+                                <td>
+                                    {position.source === "EXIT" ? "Closed" : "Open"}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
                 </table>
             </div>
 
