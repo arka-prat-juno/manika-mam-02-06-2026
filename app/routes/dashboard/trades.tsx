@@ -26,11 +26,15 @@ import {
     useNavigation,
     useRevalidator
 } from "react-router";
+import { calculatePnL } from "~/database/utils.server";
 
 export async function loader({
     request
 }: any) {
     const user = await requireUser(request);
+
+    const intraday_data =
+        await calculatePnL(request);
 
     /*
     =========================
@@ -116,7 +120,8 @@ export async function loader({
         user,
         futures,
         options,
-        exitTrades: exitTradesWithPnL
+        exitTrades: exitTradesWithPnL,
+        intraday_data
     };
 }
 
@@ -264,7 +269,8 @@ export default function TradesPage({
     loaderData
 }: any) {
     const {
-        user
+        user,
+        intraday_data
     } = loaderData;
 
     const futures =
@@ -397,12 +403,12 @@ AUTO REFRESH
 
                 <div className={styles.totalPnlBox}>
                     <div className={styles.totalPnlLabel}>
-                        TOTAL OPEN VALUE (or anything you want)
+                        Intraday Pnl
                     </div>
 
                     <div className={styles.totalPnlValue}>
                         {/* same value for now */}
-                        {totalOpenPositions}
+                        {intraday_data.totalPnL}
                     </div>
                 </div>
             </div>
