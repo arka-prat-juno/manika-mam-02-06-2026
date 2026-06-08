@@ -276,6 +276,14 @@ export default function TradesPage({
         useNavigation();
     const revalidator =
         useRevalidator();
+
+        const futuresTrades = exitTrades.filter(
+    (t: any) => t.position?.instrumentType === "FUTURE"
+);
+
+const optionsTrades = exitTrades.filter(
+    (t: any) => t.position?.instrumentType === "OPTIONS"
+);
     // useEffect(() => {
     //     const es = new EventSource("/dashboard/trades/live");
 
@@ -745,12 +753,75 @@ AUTO REFRESH
 
 <section className={styles.section}>
     <h2 className={styles.sectionTitle}>
-        Exit Trades
+        Futures Exit Trades
     </h2>
 
-    {exitTrades.length === 0 ? (
+    {futuresTrades.length === 0 ? (
         <div className={styles.empty}>
-            No exit trades yet
+            No futures exit trades
+        </div>
+    ) : (
+        <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Qty</th>
+                        <th>Entry Price</th>
+                        <th>Exit Price</th>
+                        <th>PnL</th>
+                        <th>Expiry</th>
+                        <th>User</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {futuresTrades.map((t: any) => (
+                        <tr key={t.id}>
+                            <td>{t.position?.script}</td>
+                            <td>{t.quantity}</td>
+
+                            <td>
+                                ₹{Number(t.position?.averagePrice).toFixed(2)}
+                            </td>
+
+                            <td>₹{Number(t.price).toFixed(2)}</td>
+
+                            <td
+                                style={{
+                                    color:
+                                        t.pnl >= 0 ? "green" : "red",
+                                }}
+                            >
+                                ₹{t.pnl.toFixed(2)}
+                            </td>
+
+                            <td>
+                                {t.position?.expiry ?? "-"}
+                            </td>
+
+                            <td>{t.user?.username}</td>
+
+                            <td>
+                                {new Date(t.createdAt).toLocaleString()}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )}
+</section>
+
+<section className={styles.section}>
+    <h2 className={styles.sectionTitle}>
+        Options Exit Trades
+    </h2>
+
+    {optionsTrades.length === 0 ? (
+        <div className={styles.empty}>
+            No options exit trades
         </div>
     ) : (
         <div className={styles.tableWrapper}>
@@ -759,57 +830,57 @@ AUTO REFRESH
                     <tr>
                         <th>Symbol</th>
                         <th>Type</th>
+                        <th>Strike</th>
+                        <th>Option</th>
                         <th>Qty</th>
                         <th>Entry Price</th>
                         <th>Exit Price</th>
                         <th>PnL</th>
+                        <th>Expiry</th>
                         <th>User</th>
                         <th>Date</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    {exitTrades.map((t: any) => {
-                        const entryPrice =
-                            t.position?.averagePrice;
+                    {optionsTrades.map((t: any) => (
+                        <tr key={t.id}>
+                            <td>{t.position?.script}</td>
 
-                        const exitPrice = t.price;
+                            <td>{t.position?.instrumentType}</td>
 
-                        return (
-                            <tr key={t.id}>
-                                <td>{t.position?.script}</td>
+                            <td>{t.position?.strikePrice ?? "-"}</td>
 
-                                <td>
-                                    {t.position?.instrumentType}
-                                </td>
+                            <td>{t.position?.optionType ?? "-"}</td>
 
-                                <td>{t.quantity}</td>
+                            <td>{t.quantity}</td>
 
-                                <td>₹{Number(entryPrice).toFixed(2)}</td>
+                            <td>
+                                ₹{Number(t.position?.averagePrice).toFixed(2)}
+                            </td>
 
-                                <td>₹{Number(exitPrice).toFixed(2)}</td>
+                            <td>₹{Number(t.price).toFixed(2)}</td>
 
-                                <td
-                                    style={{
-                                        color:
-                                            t.pnl >= 0
-                                                ? "green"
-                                                : "red",
-                                    }}
-                                >
-                                    ₹ {t.pnl.toFixed(2)}
-                                </td>
+                            <td
+                                style={{
+                                    color:
+                                        t.pnl >= 0 ? "green" : "red",
+                                }}
+                            >
+                                ₹{t.pnl.toFixed(2)}
+                            </td>
 
-                                <td>{t.user?.username}</td>
+                            <td>
+                                {t.position?.expiry ?? "-"}
+                            </td>
 
-                                <td>
-                                    {new Date(
-                                        t.createdAt
-                                    ).toLocaleString()}
-                                </td>
-                            </tr>
-                        );
-                    })}
+                            <td>{t.user?.username}</td>
+
+                            <td>
+                                {new Date(t.createdAt).toLocaleString()}
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
