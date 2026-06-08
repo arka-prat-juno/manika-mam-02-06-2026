@@ -27,5 +27,6 @@ export default [
     route("sign-up", "./routes/auth/sign-up.tsx"),
 
     // https://reactrouter.com/start/framework/routing 
-    route("api/api-settlement", "./routes/api/settlement.ts")
+    route("api/api-settlement", "./routes/api/settlement.ts"),
+    route("api/live-price-update", "./routes/api/live-price-update.ts")
 ] satisfies RouteConfig;

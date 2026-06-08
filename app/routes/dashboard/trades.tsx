@@ -23,7 +23,8 @@ import {
 } from "react";
 import {
     Form, 
-    useNavigation
+    useNavigation,
+    useRevalidator
 } from "react-router";
 
 export async function loader({
@@ -225,33 +226,48 @@ export default function TradesPage({
         user
     } = loaderData;
 
-    const [
-        liveData,
-        setLiveData
-    ] = useState({
-        futures: loaderData.futures,
-        options: loaderData.options
-    });
-
     const futures =
-        liveData.futures;
+        loaderData.futures;
 
     const options =
-        liveData.options;
+        loaderData.options;
 
     const navigation =
         useNavigation();
+    const revalidator =
+        useRevalidator();
+    // useEffect(() => {
+    //     const es = new EventSource("/dashboard/trades/live");
+
+    //     es.onmessage = (event) => {
+    //         const data = JSON.parse(event.data);
+
+    //         setLiveData(data);
+    //     };
+
+    //     return () => es.close();
+    // }, [
+    // ]);
+    /*
+=========================
+AUTO REFRESH
+=========================
+*/
+
     useEffect(() => {
-        const es = new EventSource("/dashboard/trades/live");
 
-        es.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+        const interval =
+            setInterval(() => {
 
-            setLiveData(data);
-        };
+                revalidator.revalidate();
 
-        return () => es.close();
+            }, 10000);
+
+        return () =>
+            clearInterval(interval);
+
     }, [
+        revalidator
     ]);
     useEffect(() => {
 
