@@ -5,7 +5,7 @@ import {
 } from "react-router";
 
 import bcrypt from "bcryptjs";
-
+import styles from "./manage-users.module.css";
 import {
     eq
 } from "drizzle-orm";
@@ -137,14 +137,17 @@ export default function ManageUsersPage() {
     const data = useLoaderData() as any;
 
     return (
-        <div>
-            <h1>Manage Users</h1>
+        <div className={styles.container}>
+            
+            <h1 className={styles.title}>
+                Manage Users
+            </h1>
 
             {/* ======================
                 CREATE USER
             ====================== */}
 
-            <Form method="post">
+            <Form method="post" className={styles.form}>
                 <input
                     type="hidden"
                     name="intent"
@@ -167,7 +170,6 @@ export default function ManageUsersPage() {
                     <option value="participant">
                         Participant
                     </option>
-
                     <option value="admin">
                         Admin
                     </option>
@@ -184,46 +186,55 @@ export default function ManageUsersPage() {
                 USERS LIST
             ====================== */}
 
-            {data.users.map((user: any) => (
-                <div
-                    key={user.id}
-                    style={{
-                        display: "flex",
-                        gap: "1rem",
-                        marginBottom: "1rem"
-                    }}
-                >
-                    <div>
-                        #{user.id}
+            <div className={styles.list}>
+                {data.users.map((user: any) => (
+                    <div
+                        key={user.id}
+                        className={styles.userRow}
+                    >
+                        <div className={styles.userInfo}>
+                            <div className={styles.userId}>
+                                #{user.id}
+                            </div>
+
+                            <div className={styles.username}>
+                                {user.username}
+                            </div>
+
+                            <div
+                                className={`${styles.role} ${
+                                    user.role === "admin"
+                                        ? styles.roleAdmin
+                                        : styles.roleParticipant
+                                }`}
+                            >
+                                {user.role}
+                            </div>
+                        </div>
+
+                        <Form method="post">
+                            <input
+                                type="hidden"
+                                name="intent"
+                                value="delete-user"
+                            />
+
+                            <input
+                                type="hidden"
+                                name="userId"
+                                value={user.id}
+                            />
+
+                            <button
+                                type="submit"
+                                className={styles.deleteBtn}
+                            >
+                                Delete
+                            </button>
+                        </Form>
                     </div>
-
-                    <div>
-                        {user.username}
-                    </div>
-
-                    <div>
-                        {user.role}
-                    </div>
-
-                    <Form method="post">
-                        <input
-                            type="hidden"
-                            name="intent"
-                            value="delete-user"
-                        />
-
-                        <input
-                            type="hidden"
-                            name="userId"
-                            value={user.id}
-                        />
-
-                        <button type="submit">
-                            Delete
-                        </button>
-                    </Form>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
