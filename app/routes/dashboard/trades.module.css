@@ -145,3 +145,25 @@
     gap: 1rem;
     justify-content: flex-end;
 }
+
+
+.totalPnlBox {
+    border: 4px double #333;
+    padding: 20px;
+    margin: 20px 0 30px 0;
+    text-align: center;
+    background: #0f0f0f10;
+    border-radius: 8px;
+}
+
+.totalPnlLabel {
+    font-size: 14px;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-bottom: 10px;
+}
+
+.totalPnlValue {
+    font-size: 32px;
+    font-weight: 700;
+}
