@@ -100,6 +100,35 @@ export const dailyPnls = pgTable("daily_pnls", {
     }).defaultNow().notNull()
 });
 
+
+export const dailyPnlsRelations =
+    relations(
+        dailyPnls,
+        ({ one }) => ({
+            user: one(users, {
+                fields: [
+                    dailyPnls.userId
+                ],
+
+                references: [
+                    users.id
+                ]
+            })
+        })
+    );
+
+
+
+export const usersRelations =
+    relations(
+        users,
+        ({ many }) => ({
+            dailyPnls:
+                many(dailyPnls)
+        })
+    );
+
+
 /* =========================
    UserProfile → profiles
 ========================= */
@@ -268,13 +297,13 @@ export const trades = pgTable(
    Relations
 ========================= */
 
-export const usersRelations = relations(users, ({
-    one, many 
-}) => ({
-    profile: one(profiles),
-    positions: many(positions),
-    trades: many(trades)
-}));
+// export const usersRelations = relations(users, ({
+//     one, many 
+// }) => ({
+//     profile: one(profiles),
+//     positions: many(positions),
+//     trades: many(trades)
+// }));
 
 export const profilesRelations = relations(profiles, ({
     one 
