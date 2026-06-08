@@ -20,7 +20,7 @@ export async function loader({
 export default function DashboardLayout() {
     return (
         <div>
-            <h1>Dashboard</h1>
+            {/* <h1>Dashboard</h1> */}
 
             <Outlet />
         </div>
