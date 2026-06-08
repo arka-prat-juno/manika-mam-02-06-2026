@@ -10,13 +10,15 @@ import {
     db
 } from "~/database/db.server";
 
-import {
-    users,
-    dailyPnls
-} from "~/database/schema.server";
+// import {
+//     users,
+//     dailyPnls
+// } from "~/database/schema.server";
 
 import {
-    calculatePnLForUser
+    calculatePnLForUser,
+    getExistingDailyPnL,
+    getLatestDailyPnL
 } from "~/database/utils.server";
 
 /* =========================
@@ -64,20 +66,7 @@ export async function loader() {
         =========================
         */
 
-        const existing =
-            await db.query.dailyPnls.findFirst({
-                where: and(
-                    eq(
-                        dailyPnls.userId,
-                        user.id
-                    ),
-
-                    eq(
-                        dailyPnls.tradingDate,
-                        today
-                    )
-                )
-            });
+        const existing = await getExistingDailyPnL(user.id, today);
 
         if (existing) {
             continue;
@@ -92,22 +81,7 @@ export async function loader() {
         const data =
             await calculatePnLForUser(user);
 
-        const previousEntry =
-            await db.query.dailyPnls.findFirst({
-                where: eq(
-                    dailyPnls.userId,
-                    user.id
-                ),
-
-                orderBy: (
-                    table,
-                    {
-                        desc 
-                    }
-                ) => [
-                    desc(table.tradingDate)
-                ]
-            });
+        const previousEntry = await getLatestDailyPnL(user.id);
 
         const currentPnL =
             Number(data.totalPnL.toFixed(2));
