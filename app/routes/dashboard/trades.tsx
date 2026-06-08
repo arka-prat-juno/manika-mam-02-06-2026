@@ -26,7 +26,9 @@ import {
     useNavigation,
     useRevalidator
 } from "react-router";
-import { calculatePnL } from "~/database/utils.server";
+import {
+    calculatePnL 
+} from "~/database/utils.server";
 
 export async function loader({
     request
@@ -406,9 +408,11 @@ AUTO REFRESH
                         Intraday Pnl
                     </div>
 
-                    <div className={styles.totalPnlValue}>
+                    <div className={styles.totalPnlValue} style={{
+                        color: intraday_data.totalPnL >= 0 ? "green" : "red"
+                    }}>
                         {/* same value for now */}
-                        {intraday_data.totalPnL}
+                        {intraday_data.totalPnL.toFixed(2)}
                     </div>
                 </div>
             </div>
