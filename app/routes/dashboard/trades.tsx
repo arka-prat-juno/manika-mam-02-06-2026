@@ -284,6 +284,11 @@ export default function TradesPage({
 const optionsTrades = exitTrades.filter(
     (t: any) => t.position?.instrumentType === "OPTIONS"
 );
+
+
+const totalPnL = exitTrades.reduce((sum: number, t: any) => {
+    return sum + (t.pnl ?? 0);
+}, 0);
     // useEffect(() => {
     //     const es = new EventSource("/dashboard/trades/live");
 
@@ -750,7 +755,20 @@ AUTO REFRESH
             {/* ======================
     EXIT TRADES TABLE
 ====================== */}
+<div className={styles.totalPnlBox}>
+    <div className={styles.totalPnlLabel}>
+        TOTAL PNL OF EXIT TRADES
+    </div>
 
+    <div
+        className={styles.totalPnlValue}
+        style={{
+            color: totalPnL >= 0 ? "green" : "red",
+        }}
+    >
+        ₹ {totalPnL.toFixed(2)}
+    </div>
+</div>
 <section className={styles.section}>
     <h2 className={styles.sectionTitle}>
         Futures Exit Trades
