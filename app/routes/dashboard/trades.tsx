@@ -760,7 +760,9 @@ AUTO REFRESH
                         <th>Symbol</th>
                         <th>Type</th>
                         <th>Qty</th>
+                        <th>Entry Price</th>
                         <th>Exit Price</th>
+                        <th>PnL</th>
                         <th>User</th>
                         <th>Date</th>
                     </tr>
@@ -771,8 +773,16 @@ AUTO REFRESH
                         <tr key={t.id}>
                             <td>{t.position?.script}</td>
                             <td>{t.position?.instrumentType}</td>
-                            <td>{t.quantity}</td>
+                            <td>{t.position?.averagePrice}</td>
                             <td>₹{t.price}</td>
+                            <td>₹{t.price}</td>
+                            <td
+    style={{
+        color: t.pnl >= 0 ? "green" : "red",
+    }}
+>
+    ₹ {t.pnl}
+</td>
                             <td>{t.user?.username}</td>
                             <td>
                                 {new Date(t.createdAt).toLocaleString()}
