@@ -5,7 +5,7 @@ export function Navbar() {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.logo}>
-                Stockwise
+                
             </div>
 
             <nav className={styles.links}>
