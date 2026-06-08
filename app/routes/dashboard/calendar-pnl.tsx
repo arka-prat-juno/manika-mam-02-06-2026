@@ -86,6 +86,27 @@ export default function CalendarPnL({
 
         }, {} as Record<string, typeof rows>);
 
+
+
+
+    const now =
+    new Date();
+
+const currentMonthKey =
+    now.toLocaleString(
+        "en-IN",
+        {
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+if (
+    !grouped[currentMonthKey]
+) {
+
+    grouped[currentMonthKey] = [];
+}
     /*
     =========================
     BUILD MONTH DATA
