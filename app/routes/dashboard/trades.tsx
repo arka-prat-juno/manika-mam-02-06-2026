@@ -769,26 +769,47 @@ AUTO REFRESH
                 </thead>
 
                 <tbody>
-                    {exitTrades.map((t: any) => (
-                        <tr key={t.id}>
-                            <td>{t.position?.script}</td>
-                            <td>{t.position?.instrumentType}</td>
-                            <td>{t.position?.averagePrice}</td>
-                            <td>₹{t.price}</td>
-                            <td>₹{t.price}</td>
-                            <td
-    style={{
-        color: t.pnl >= 0 ? "green" : "red",
-    }}
->
-    ₹ {t.pnl}
-</td>
-                            <td>{t.user?.username}</td>
-                            <td>
-                                {new Date(t.createdAt).toLocaleString()}
-                            </td>
-                        </tr>
-                    ))}
+                    {exitTrades.map((t: any) => {
+                        const entryPrice =
+                            t.position?.averagePrice;
+
+                        const exitPrice = t.price;
+
+                        return (
+                            <tr key={t.id}>
+                                <td>{t.position?.script}</td>
+
+                                <td>
+                                    {t.position?.instrumentType}
+                                </td>
+
+                                <td>{t.quantity}</td>
+
+                                <td>₹{Number(entryPrice).toFixed(2)}</td>
+
+                                <td>₹{Number(exitPrice).toFixed(2)}</td>
+
+                                <td
+                                    style={{
+                                        color:
+                                            t.pnl >= 0
+                                                ? "green"
+                                                : "red",
+                                    }}
+                                >
+                                    ₹ {t.pnl.toFixed(2)}
+                                </td>
+
+                                <td>{t.user?.username}</td>
+
+                                <td>
+                                    {new Date(
+                                        t.createdAt
+                                    ).toLocaleString()}
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>
