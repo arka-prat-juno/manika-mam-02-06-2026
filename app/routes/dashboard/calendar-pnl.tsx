@@ -86,6 +86,50 @@ export default function CalendarPnL({
 
         }, {} as Record<string, typeof rows>);
 
+    /*
+    =========================
+    BUILD MONTH DATA
+    =========================
+    */
+
+    const months =
+        Object.entries(grouped).map(
+            ([month, entries]) => {
+
+                const firstDate =
+                    new Date(entries[0].tradingDate);
+
+                const year =
+                    firstDate.getFullYear();
+
+                const monthIndex =
+                    firstDate.getMonth();
+
+                const daysInMonth =
+                    new Date(
+                        year,
+                        monthIndex + 1,
+                        0
+                    ).getDate();
+
+                const firstDay =
+                    new Date(
+                        year,
+                        monthIndex,
+                        1
+                    ).getDay();
+
+                return {
+                    month,
+                    entries,
+                    year,
+                    monthIndex,
+                    daysInMonth,
+                    firstDay
+                };
+            }
+        );
+
     const weekdays = [
         "Sun",
         "Mon",
@@ -104,8 +148,16 @@ export default function CalendarPnL({
             </h1>
 
             {
-                Object.entries(grouped).map(
-                    ([month, entries]) => (
+                months.map((monthData) => {
+
+                    const {
+                        month,
+                        entries,
+                        daysInMonth,
+                        firstDay
+                    } = monthData;
+
+                    return (
 
                         <section
                             key={month}
@@ -132,19 +184,45 @@ export default function CalendarPnL({
                             <div className={styles.grid}>
 
                                 {
-                                    entries.map((entry) => {
+                                    Array.from({
+                                        length: firstDay
+                                    }).map((_, i) => (
+                                        <div
+                                            key={`empty-${i}`}
+                                        />
+                                    ))
+                                }
+
+                                {
+                                    Array.from({
+                                        length: daysInMonth
+                                    }).map((_, index) => {
+
+                                        const day =
+                                            index + 1;
+
+                                        const found =
+                                            entries.find((entry) => {
+
+                                                const d =
+                                                    new Date(
+                                                        entry.tradingDate
+                                                    );
+
+                                                return (
+                                                    d.getDate() === day
+                                                );
+                                            });
 
                                         const pnl =
-                                            Number(entry.pnl);
-
-                                        const date =
-                                            new Date(
-                                                entry.tradingDate
-                                            );
+                                            found
+                                                ? Number(found.pnl)
+                                                : 0;
 
                                         return (
+
                                             <div
-                                                key={entry.id}
+                                                key={day}
                                                 className={`${styles.card} ${
                                                     pnl >= 0
                                                         ? styles.profit
@@ -153,14 +231,13 @@ export default function CalendarPnL({
                                             >
 
                                                 <div className={styles.date}>
-                                                    {
-                                                        date.getDate()
-                                                    }
+                                                    {day}
                                                 </div>
 
                                                 <div className={styles.user}>
                                                     {
-                                                        entry.user.username
+                                                        found?.user.username ??
+                                                        "-"
                                                     }
                                                 </div>
 
@@ -178,8 +255,8 @@ export default function CalendarPnL({
                             </div>
 
                         </section>
-                    )
-                )
+                    );
+                })
             }
 
         </div>
