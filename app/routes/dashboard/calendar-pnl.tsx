@@ -86,6 +86,16 @@ export default function CalendarPnL({
 
         }, {} as Record<string, typeof rows>);
 
+    const weekdays = [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+    ];
+
     return (
         <div className={styles.container}>
 
@@ -106,52 +116,63 @@ export default function CalendarPnL({
                                 {month}
                             </h2>
 
-                            <div className={styles.entries}>
-
+                            <div className={styles.weekdays}>
                                 {
-                                    entries.map((entry) => (
-
+                                    weekdays.map((day) => (
                                         <div
-                                            key={entry.id}
-                                            className={`${styles.card} ${
-                                                Number(entry.pnl) >= 0
-                                                    ? styles.profit
-                                                    : styles.loss
-                                            }`}
+                                            key={day}
+                                            className={styles.weekday}
                                         >
-
-                                            <div>
-                                                <strong>
-                                                    {
-                                                        new Date(
-                                                            entry.tradingDate
-                                                        ).toLocaleDateString(
-                                                            "en-IN",
-                                                            {
-                                                                day: "2-digit",
-                                                                month: "short",
-                                                                year: "numeric"
-                                                            }
-                                                        )
-                                                    }
-                                                </strong>
-                                            </div>
-
-                                            <div>
-                                                {
-                                                    entry.user.username
-                                                }
-                                            </div>
-
-                                            <div className={styles.pnl}>
-                                                ₹ {
-                                                    Number(entry.pnl)
-                                                        .toFixed(2)
-                                                }
-                                            </div>
-
+                                            {day}
                                         </div>
                                     ))
+                                }
+                            </div>
+
+                            <div className={styles.grid}>
+
+                                {
+                                    entries.map((entry) => {
+
+                                        const pnl =
+                                            Number(entry.pnl);
+
+                                        const date =
+                                            new Date(
+                                                entry.tradingDate
+                                            );
+
+                                        return (
+                                            <div
+                                                key={entry.id}
+                                                className={`${styles.card} ${
+                                                    pnl >= 0
+                                                        ? styles.profit
+                                                        : styles.loss
+                                                }`}
+                                            >
+
+                                                <div className={styles.date}>
+                                                    {
+                                                        date.getDate()
+                                                    }
+                                                </div>
+
+                                                <div className={styles.user}>
+                                                    {
+                                                        entry.user.username
+                                                    }
+                                                </div>
+
+                                                <div className={styles.pnl}>
+                                                    ₹ {
+                                                        pnl.toFixed(0)
+                                                    }
+                                                </div>
+
+                                            </div>
+                                        );
+                                    })
                                 }
 
                             </div>
