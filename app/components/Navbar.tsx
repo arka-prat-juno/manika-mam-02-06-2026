@@ -21,6 +21,12 @@ export function Navbar() {
                 >
                     MTM
                 </NavLink>
+                <NavLink
+                    to="/dashboard/calendar-pnl"
+                    className={styles.link}
+                >
+                    Calendar PNL
+                </NavLink>
 
                 <NavLink
                     to="/dashboard/add-trade"
