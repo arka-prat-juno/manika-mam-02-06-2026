@@ -80,6 +80,26 @@ export const users = pgTable("users", {
     passwordHash: text("password_hash").notNull()
 });
 
+export const dailyPnls = pgTable("daily_pnls", {
+    id: serial("id").primaryKey(),
+
+    userId: integer("user_id")
+        .notNull()
+        .references(() => users.id),
+
+    pnl: numeric("pnl", {
+        precision: 15,
+        scale: 2
+    }).notNull(),
+
+    tradingDate: date("trading_date")
+        .notNull(),
+
+    createdAt: timestamp("created_at", {
+        withTimezone: true
+    }).defaultNow().notNull()
+});
+
 /* =========================
    UserProfile → profiles
 ========================= */

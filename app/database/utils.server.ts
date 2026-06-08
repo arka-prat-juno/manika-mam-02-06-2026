@@ -7,7 +7,8 @@ import {
 } from "~/utils/auth.server";
 import {
     positions, 
-    trades
+    trades,
+    type User
 } from "./schema.server";
 import {
     db 
@@ -438,9 +439,275 @@ async function calculatePnL(request: Request) {
     };
 }
 
+async function calculatePnLForUser(user: User) {
+
+    // const currentUser =
+    //     await requireUser(request);
+
+    /*
+    =========================
+    USER FILTER
+    =========================
+    */
+
+    const activeWhereClause =
+        user.role ===
+        "admin"
+            ? gt(
+                positions.quantity,
+                0
+            )
+            : and(
+                eq(
+                    positions.userId,
+                    user.id
+                ),
+
+                gt(
+                    positions.quantity,
+                    0
+                )
+            );
+
+    /*
+    =========================
+    ACTIVE POSITIONS
+    =========================
+    */
+
+    const activePositions =
+        await db.query.positions.findMany({
+            where:
+                activeWhereClause,
+
+            with: {
+                user: true
+            },
+
+            orderBy: (
+                positions,
+                {
+                    asc 
+                }
+            ) => [
+                asc(positions.id)
+            ]
+        });
+
+    /*
+    =========================
+    TODAY EXIT TRADES
+    =========================
+    */
+
+    const todayStart =
+        getTodayStartIST();
+
+    const exitTrades =
+        await db.query.trades.findMany({
+            where:
+                user.role ===
+                "admin"
+                    ? and(
+                        eq(
+                            trades.tradeType,
+                            "EXIT"
+                        ),
+
+                        gte(
+                            trades.createdAt,
+                            todayStart
+                        )
+                    )
+                    : and(
+                        eq(
+                            trades.tradeType,
+                            "EXIT"
+                        ),
+
+                        eq(
+                            trades.userId,
+                            user.id
+                        ),
+
+                        gte(
+                            trades.createdAt,
+                            todayStart
+                        )
+                    ),
+
+            with: {
+                position: true
+            }
+        });
+
+    /*
+    =========================
+    MARKET HOURS
+    =========================
+    */
+
+    const isLiveMarket =
+        isMarketHoursIST();
+
+    /*
+    =========================
+    ACTIVE POSITION PNL
+    =========================
+    */
+
+    const activePnL =
+        activePositions.map((position) => {
+
+            const previousSettled =
+                Number(position.previousSettledPrice);
+
+            const settled =
+                Number(position.settledPrice);
+
+            const current =
+                Number(position.currentPrice ??
+                        0);
+
+            let diff = 0;
+
+            if (
+                isLiveMarket
+            ) {
+                diff =
+                    current -
+                        previousSettled;
+            } else {
+                diff =
+                    settled -
+                        previousSettled;
+            }
+
+            if (
+                position.positionType ===
+                    "SHORT"
+            ) {
+                diff *= -1;
+            }
+
+            /*
+                =========================
+                MULTIPLY LOT SIZE
+                =========================
+                */
+
+            const pnl =
+                diff *
+                    position.quantity *
+                    position.lotSize;
+
+            return {
+                ...position,
+
+                pnl,
+
+                source:
+                        "ACTIVE"
+            };
+        });
+
+    /*
+    =========================
+    EXITED POSITION PNL
+    =========================
+    */
+
+    const exitedPnL =
+        exitTrades.map((trade) => {
+
+            const position =
+                trade.position;
+
+            const previousSettled =
+                Number(position.previousSettledPrice);
+
+            const exitPrice =
+                Number(trade.price);
+
+            let diff =
+                exitPrice -
+                    previousSettled;
+
+            /*
+                =========================
+                SHORT REVERSE
+                =========================
+                */
+
+            if (
+                position.positionType ===
+                    "SHORT"
+            ) {
+                diff *= -1;
+            }
+
+            const pnl =
+                diff *
+                    trade.quantity *
+                    position.lotSize;
+
+            return {
+                ...position,
+
+                pnl,
+
+                exitedQuantity:
+                        trade.quantity,
+
+                exitPrice,
+
+                source:
+                        "EXIT"
+            };
+        });
+
+    /*
+    =========================
+    MERGE
+    =========================
+    */
+
+    const allPositions =
+        [
+            ...activePnL,
+            ...exitedPnL
+        ];
+
+    /*
+    =========================
+    TOTAL
+    =========================
+    */
+
+    const totalPnL =
+        allPositions.reduce(
+            (
+                acc,
+                position
+            ) =>
+                acc +
+                position.pnl,
+
+            0
+        );
+
+    return {
+        positions:
+            allPositions,
+
+        totalPnL
+    };
+}
+
 export {
     getInstrumentDetails,
     doALogin,
     isMarketHoursIST,
-    calculatePnL 
+    calculatePnL,
+    calculatePnLForUser
 };

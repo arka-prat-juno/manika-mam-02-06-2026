@@ -1,0 +1,150 @@
+
+// app/routes/api/store-daily-pnl.ts
+
+import {
+    and,
+    eq
+} from "drizzle-orm";
+
+import {
+    db
+} from "~/database/db.server";
+
+import {
+    users,
+    dailyPnls
+} from "~/database/schema.server";
+
+import {
+    calculatePnLForUser
+} from "~/database/utils.server";
+
+/* =========================
+   LOADER
+========================= */
+
+export async function loader() {
+
+    /*
+    =========================
+    TODAY DATE (IST)
+    =========================
+    */
+
+    const today =
+        new Date()
+            .toLocaleDateString(
+                "en-CA",
+                {
+                    timeZone:
+                        "Asia/Kolkata"
+                }
+            );
+
+    /*
+    =========================
+    GET ALL USERS
+    =========================
+    */
+
+    const allUsers =
+        await db.query.users.findMany();
+
+    /*
+    =========================
+    LOOP USERS
+    =========================
+    */
+
+    for (const user of allUsers) {
+
+        /*
+        =========================
+        PREVENT DUPLICATE ENTRY
+        =========================
+        */
+
+        const existing =
+            await db.query.dailyPnls.findFirst({
+                where: and(
+                    eq(
+                        dailyPnls.userId,
+                        user.id
+                    ),
+
+                    eq(
+                        dailyPnls.tradingDate,
+                        today
+                    )
+                )
+            });
+
+        if (existing) {
+            continue;
+        }
+
+        /*
+        =========================
+        CALCULATE DAILY PNL
+        =========================
+        */
+
+        const data =
+            await calculatePnLForUser(user);
+
+        const previousEntry =
+            await db.query.dailyPnls.findFirst({
+                where: eq(
+                    dailyPnls.userId,
+                    user.id
+                ),
+
+                orderBy: (
+                    table,
+                    {
+                        desc 
+                    }
+                ) => [
+                    desc(table.tradingDate)
+                ]
+            });
+
+        const currentPnL =
+            Number(data.totalPnL.toFixed(2));
+
+        if (
+            previousEntry &&
+    Number(previousEntry.pnl).toFixed(2) ===
+currentPnL.toFixed(2)
+        ) {
+
+            console.log(`Skipping ${user.username} (holiday/no change)`);
+
+            continue;
+        }
+
+        /*
+        =========================
+        STORE SNAPSHOT
+        =========================
+        */
+
+        await db
+            .insert(dailyPnls)
+            .values({
+                userId:
+                    user.id,
+
+                pnl:
+                    data.totalPnL.toFixed(2),
+
+                tradingDate:
+                    today
+            });
+    }
+
+    return Response.json({
+        success: true
+    });
+}
+

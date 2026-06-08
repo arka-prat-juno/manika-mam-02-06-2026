@@ -18,6 +18,10 @@ export default [
             route(
                 "trades/live",
                 "./routes/dashboard/trades-live.ts"
+            ),
+            route(
+                "calendar-pnl",
+                "./routes/dashboard/calendar-pnl.tsx"
             )
         ])
     ]),
@@ -28,5 +32,9 @@ export default [
 
     // https://reactrouter.com/start/framework/routing 
     route("api/api-settlement", "./routes/api/settlement.ts"),
-    route("api/live-price-update", "./routes/api/live-price-update.ts")
+    route("api/live-price-update", "./routes/api/live-price-update.ts"),
+    route(
+        "api/store-daily-pnl",
+        "./routes/api/store-daily-pnl.ts"
+    )
 ] satisfies RouteConfig;
