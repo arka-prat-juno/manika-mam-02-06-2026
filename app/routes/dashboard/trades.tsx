@@ -270,6 +270,25 @@ export default function TradesPage({
 
     const options =
         loaderData.options;
+
+        const openPnL = [...futures, ...options].reduce(
+    (sum: number, pos: any) => {
+        const avg = Number(pos.averagePrice || 0);
+        const current = Number(pos.currentPrice || 0);
+        const qty = Number(pos.quantity || 0);
+
+        let pnl = 0;
+
+        if (pos.positionType === "SHORT") {
+            pnl = (avg - current) * qty;
+        } else {
+            pnl = (current - avg) * qty; // LONG default
+        }
+
+        return sum + pnl;
+    },
+    0
+);
     const exitTrades = loaderData.exitTrades;
 
     const navigation =
@@ -363,6 +382,21 @@ AUTO REFRESH
                         : "Viewing your active positions"}
                 </p>
             </div>
+
+            <div className={styles.totalPnlBox}>
+    <div className={styles.totalPnlLabel}>
+        TOTAL PNL OF OPEN TRADES
+    </div>
+
+    <div
+        className={styles.totalPnlValue}
+        style={{
+            color: openPnL >= 0 ? "green" : "red",
+        }}
+    >
+        ₹ {openPnL.toFixed(2)}
+    </div>
+</div>
 
             {/* ======================
                 FUTURES TABLE
@@ -757,7 +791,7 @@ AUTO REFRESH
 ====================== */}
 <div className={styles.totalPnlBox}>
     <div className={styles.totalPnlLabel}>
-        TOTAL PNL OF EXIT TRADES
+        TOTAL PNL OF CLOSED TRADES
     </div>
 
     <div
