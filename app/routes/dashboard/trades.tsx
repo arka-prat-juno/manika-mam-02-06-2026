@@ -290,6 +290,7 @@ export default function TradesPage({
     0
 );
     const exitTrades = loaderData.exitTrades;
+    const totalOpenPositions = futures.length + options.length;
 
     const navigation =
         useNavigation();
@@ -382,6 +383,17 @@ AUTO REFRESH
                         : "Viewing your active positions"}
                 </p>
             </div>
+
+
+<div className={styles.totalPnlBox}>
+    <div className={styles.totalPnlLabel}>
+        TOTAL OPEN POSITIONS
+    </div>
+
+    <div className={styles.totalPnlValue}>
+        {totalOpenPositions}
+    </div>
+</div>
 
             <div className={styles.totalPnlBox}>
     <div className={styles.totalPnlLabel}>
