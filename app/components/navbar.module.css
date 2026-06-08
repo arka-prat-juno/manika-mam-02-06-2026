@@ -1,31 +1,53 @@
-.navbar {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  /* Changed to center since the logo is gone, 
-     or keep space-between if you want them aligned to one side */
-  justify-content: center; 
+.sidebar {
+    width: 240px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
 
-  padding: 0 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #f3f4f6;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+
+    background: #0f172a; /* dark dashboard look */
+    border-right: 1px solid #1f2937;
+
+    padding: 20px 16px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
 }
 
 .links {
-  display: flex;
-  gap: 40px; /* Increased gap for larger items */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .link {
-  color: #6b7280;
-  text-decoration: none;
-  /* Increased size and weight */
-  font-size: 20px; 
-  font-weight: 600;
-  transition: color 0.2s ease;
+    color: #cbd5e1;
+    text-decoration: none;
+
+    font-size: 16px;
+    font-weight: 500;
+
+    padding: 10px 12px;
+    border-radius: 8px;
+
+    transition: all 0.2s ease;
 }
 
 .link:hover {
-  color: #3b82f6;
+    background: #1e293b;
+    color: white;
+}
+
+/* active route styling (NavLink supports "active") */
+.link:global(.active) {
+    background: #2563eb;
+    color: white;
 }
