@@ -72,10 +72,49 @@ export async function loader({
         position.instrumentType ===
       "OPTIONS").sort((a, b) => a.id - b.id);
 
+
+
+      const exitTrades = await db.query.trades.findMany({
+    where: (table, { eq }) => eq(table.tradeType, "EXIT"),
+    with: {
+        user: true,
+        position: true,
+    },
+    orderBy: (table, { desc }) => [desc(table.createdAt)],
+});
+
+
+
+const exitTradesWithPnL = exitTrades.map((trade: any) => {
+    const position = trade.position;
+
+    const avgPrice = Number(position.averagePrice);
+    const exitPrice = Number(trade.price);
+    const qty = Number(trade.quantity);
+    const lotSize = Number(position.lotSize || 1);
+
+    let pnl = 0;
+
+    if (position.positionType === "LONG") {
+        pnl = (exitPrice - avgPrice) * qty * lotSize;
+    } else {
+        pnl = (avgPrice - exitPrice) * qty * lotSize;
+    }
+
+    return {
+        ...trade,
+        pnl: Number(pnl.toFixed(2)),
+        avgPrice,
+        exitPrice,
+        qty,
+        lotSize,
+    };
+});
     return {
         user,
         futures,
-        options
+        options,
+        exitTrades: exitTradesWithPnL,
     };
 }
 
@@ -231,6 +270,7 @@ export default function TradesPage({
 
     const options =
         loaderData.options;
+    const exitTrades = loaderData.exitTrades;
 
     const navigation =
         useNavigation();
@@ -697,6 +737,53 @@ AUTO REFRESH
                     </div>
                 )}
             </section>
+
+
+            {/* ======================
+    EXIT TRADES TABLE
+====================== */}
+
+<section className={styles.section}>
+    <h2 className={styles.sectionTitle}>
+        Exit Trades
+    </h2>
+
+    {exitTrades.length === 0 ? (
+        <div className={styles.empty}>
+            No exit trades yet
+        </div>
+    ) : (
+        <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Type</th>
+                        <th>Qty</th>
+                        <th>Exit Price</th>
+                        <th>User</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {exitTrades.map((t: any) => (
+                        <tr key={t.id}>
+                            <td>{t.position?.script}</td>
+                            <td>{t.position?.instrumentType}</td>
+                            <td>{t.quantity}</td>
+                            <td>₹{t.price}</td>
+                            <td>{t.user?.username}</td>
+                            <td>
+                                {new Date(t.createdAt).toLocaleString()}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )}
+</section>
         </div>
     );
 }
