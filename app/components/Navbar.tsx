@@ -19,7 +19,7 @@ export function Navbar() {
                     to="/dashboard/mtm"
                     className={styles.link}
                 >
-                    MTM
+                    Stockwise Summary
                 </NavLink>
                 <NavLink
                     to="/dashboard/calendar-pnl"
