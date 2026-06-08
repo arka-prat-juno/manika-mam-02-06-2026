@@ -704,19 +704,19 @@ async function calculatePnLForUser(user: User) {
     };
 }
 
-
-
 /* =========================
    CHECK EXISTING PNL
 ========================= */
 
 export async function getExistingDailyPnL(userId: number, date: string) {
     return db.query.dailyPnls.findFirst({
-        where: (table, { eq, and }) =>
+        where: (table, {
+            eq, and 
+        }) =>
             and(
                 eq(table.userId, Number(userId)),
                 eq(table.tradingDate, date)
-            ),
+            )
     });
 }
 
@@ -726,15 +726,18 @@ export async function getExistingDailyPnL(userId: number, date: string) {
 
 export async function getLatestDailyPnL(userId: number) {
     return db.query.dailyPnls.findFirst({
-        where: (table, { eq }) =>
+        where: (table, {
+            eq 
+        }) =>
             eq(table.userId, Number(userId)),
 
-        orderBy: (table, { desc }) => [
-            desc(table.tradingDate),
-        ],
+        orderBy: (table, {
+            desc 
+        }) => [
+            desc(table.tradingDate)
+        ]
     });
 }
-
 
 export {
     getInstrumentDetails,

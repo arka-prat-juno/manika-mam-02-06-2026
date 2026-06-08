@@ -100,11 +100,12 @@ export const dailyPnls = pgTable("daily_pnls", {
     }).defaultNow().notNull()
 });
 
-
 export const dailyPnlsRelations =
     relations(
         dailyPnls,
-        ({ one }) => ({
+        ({
+            one 
+        }) => ({
             user: one(users, {
                 fields: [
                     dailyPnls.userId
@@ -117,17 +118,16 @@ export const dailyPnlsRelations =
         })
     );
 
-
-
 export const usersRelations =
     relations(
         users,
-        ({ many }) => ({
+        ({
+            many 
+        }) => ({
             dailyPnls:
                 many(dailyPnls)
         })
     );
-
 
 /* =========================
    UserProfile → profiles

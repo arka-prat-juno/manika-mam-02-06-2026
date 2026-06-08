@@ -1,8 +1,12 @@
 // app/routes/dashboard/calendar-pnl.tsx
 
-import type { Route } from "./+types/calendar-pnl";
+import type {
+    Route 
+} from "./+types/calendar-pnl";
 
-import { db } from "~/database/db.server";
+import {
+    db 
+} from "~/database/db.server";
 import styles from "./calendar-pnl.module.css";
 
 /* =========================
@@ -12,12 +16,18 @@ import styles from "./calendar-pnl.module.css";
 export async function loader() {
     const rows = await db.query.dailyPnls.findMany({
         with: {
-            user: true,
+            user: true
         },
-        orderBy: (table, { desc }) => [desc(table.tradingDate)],
+        orderBy: (table, {
+            desc 
+        }) => [
+            desc(table.tradingDate)
+        ]
     });
 
-    return { rows };
+    return {
+        rows 
+    };
 }
 
 /* =========================
@@ -32,7 +42,7 @@ function getMonthRange(date: Date) {
         year,
         monthIndex,
         daysInMonth: new Date(year, monthIndex + 1, 0).getDate(),
-        firstDay: new Date(year, monthIndex, 1).getDay(),
+        firstDay: new Date(year, monthIndex, 1).getDay()
     };
 }
 
@@ -41,21 +51,36 @@ function getMonthRange(date: Date) {
 ========================= */
 
 export default function CalendarPnL({
-    loaderData,
+    loaderData
 }: Route.ComponentProps) {
-    const { rows } = loaderData;
+    const {
+        rows 
+    } = loaderData;
 
-    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weekdays = [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+    ];
 
     const now = new Date();
-    const { year, monthIndex, daysInMonth, firstDay } =
+    const {
+        year, monthIndex, daysInMonth, firstDay 
+    } =
         getMonthRange(now);
 
     /* =========================
        BUILD PNL MAP (FAST LOOKUP)
     ========================= */
 
-    const pnlMap = new Map<string, { pnl: number; username?: string }>();
+    const pnlMap = new Map<string, {
+        pnl: number;
+        username?: string 
+    }>();
 
     for (const row of rows) {
         if (!row?.tradingDate) continue;
@@ -66,7 +91,7 @@ export default function CalendarPnL({
 
         pnlMap.set(key, {
             pnl: Number(row.pnl),
-            username: row.user?.username,
+            username: row.user?.username
         });
     }
 
@@ -78,7 +103,7 @@ export default function CalendarPnL({
                 <h2 className={styles.monthTitle}>
                     {now.toLocaleString("en-IN", {
                         month: "long",
-                        year: "numeric",
+                        year: "numeric"
                     })}
                 </h2>
 
@@ -94,12 +119,16 @@ export default function CalendarPnL({
                 {/* Calendar Grid */}
                 <div className={styles.grid}>
                     {/* Empty slots before month start */}
-                    {Array.from({ length: firstDay }).map((_, i) => (
+                    {Array.from({
+                        length: firstDay 
+                    }).map((_, i) => (
                         <div key={`empty-${i}`} />
                     ))}
 
                     {/* Days */}
-                    {Array.from({ length: daysInMonth }).map((_, index) => {
+                    {Array.from({
+                        length: daysInMonth 
+                    }).map((_, index) => {
                         const day = index + 1;
 
                         const key = `${year}-${monthIndex}-${day}`;

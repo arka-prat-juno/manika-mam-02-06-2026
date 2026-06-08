@@ -72,49 +72,51 @@ export async function loader({
         position.instrumentType ===
       "OPTIONS").sort((a, b) => a.id - b.id);
 
+    const exitTrades = await db.query.trades.findMany({
+        where: (table, {
+            eq 
+        }) => eq(table.tradeType, "EXIT"),
+        with: {
+            user: true,
+            position: true
+        },
+        orderBy: (table, {
+            desc 
+        }) => [
+            desc(table.createdAt)
+        ]
+    });
 
+    const exitTradesWithPnL = exitTrades.map((trade: any) => {
+        const position = trade.position;
 
-      const exitTrades = await db.query.trades.findMany({
-    where: (table, { eq }) => eq(table.tradeType, "EXIT"),
-    with: {
-        user: true,
-        position: true,
-    },
-    orderBy: (table, { desc }) => [desc(table.createdAt)],
-});
+        const avgPrice = Number(position.averagePrice);
+        const exitPrice = Number(trade.price);
+        const qty = Number(trade.quantity);
+        const lotSize = Number(position.lotSize || 1);
 
+        let pnl = 0;
 
+        if (position.positionType === "LONG") {
+            pnl = (exitPrice - avgPrice) * qty * lotSize;
+        } else {
+            pnl = (avgPrice - exitPrice) * qty * lotSize;
+        }
 
-const exitTradesWithPnL = exitTrades.map((trade: any) => {
-    const position = trade.position;
-
-    const avgPrice = Number(position.averagePrice);
-    const exitPrice = Number(trade.price);
-    const qty = Number(trade.quantity);
-    const lotSize = Number(position.lotSize || 1);
-
-    let pnl = 0;
-
-    if (position.positionType === "LONG") {
-        pnl = (exitPrice - avgPrice) * qty * lotSize;
-    } else {
-        pnl = (avgPrice - exitPrice) * qty * lotSize;
-    }
-
-    return {
-        ...trade,
-        pnl: Number(pnl.toFixed(2)),
-        avgPrice,
-        exitPrice,
-        qty,
-        lotSize,
-    };
-});
+        return {
+            ...trade,
+            pnl: Number(pnl.toFixed(2)),
+            avgPrice,
+            exitPrice,
+            qty,
+            lotSize
+        };
+    });
     return {
         user,
         futures,
         options,
-        exitTrades: exitTradesWithPnL,
+        exitTrades: exitTradesWithPnL
     };
 }
 
@@ -271,24 +273,27 @@ export default function TradesPage({
     const options =
         loaderData.options;
 
-        const openPnL = [...futures, ...options].reduce(
-    (sum: number, pos: any) => {
-        const avg = Number(pos.averagePrice || 0);
-        const current = Number(pos.currentPrice || 0);
-        const qty = Number(pos.quantity || 0);
+    const openPnL = [
+        ...futures,
+        ...options
+    ].reduce(
+        (sum: number, pos: any) => {
+            const avg = Number(pos.averagePrice || 0);
+            const current = Number(pos.currentPrice || 0);
+            const qty = Number(pos.quantity || 0);
 
-        let pnl = 0;
+            let pnl = 0;
 
-        if (pos.positionType === "SHORT") {
-            pnl = (avg - current) * qty;
-        } else {
-            pnl = (current - avg) * qty; // LONG default
-        }
+            if (pos.positionType === "SHORT") {
+                pnl = (avg - current) * qty;
+            } else {
+                pnl = (current - avg) * qty; // LONG default
+            }
 
-        return sum + pnl;
-    },
-    0
-);
+            return sum + pnl;
+        },
+        0
+    );
     const exitTrades = loaderData.exitTrades;
     const totalOpenPositions = futures.length + options.length;
 
@@ -297,18 +302,13 @@ export default function TradesPage({
     const revalidator =
         useRevalidator();
 
-        const futuresTrades = exitTrades.filter(
-    (t: any) => t.position?.instrumentType === "FUTURE"
-);
+    const futuresTrades = exitTrades.filter((t: any) => t.position?.instrumentType === "FUTURE");
 
-const optionsTrades = exitTrades.filter(
-    (t: any) => t.position?.instrumentType === "OPTIONS"
-);
+    const optionsTrades = exitTrades.filter((t: any) => t.position?.instrumentType === "OPTIONS");
 
-
-const totalPnL = exitTrades.reduce((sum: number, t: any) => {
-    return sum + (t.pnl ?? 0);
-}, 0);
+    const totalPnL = exitTrades.reduce((sum: number, t: any) => {
+        return sum + (t.pnl ?? 0);
+    }, 0);
     // useEffect(() => {
     //     const es = new EventSource("/dashboard/trades/live");
 
@@ -384,31 +384,43 @@ AUTO REFRESH
                 </p>
             </div>
 
+            <div className={styles.topStatsRow}>
+                <div className={styles.totalPnlBox}>
+                    <div className={styles.totalPnlLabel}>
+                        TOTAL OPEN POSITIONS
+                    </div>
 
-<div className={styles.totalPnlBox}>
-    <div className={styles.totalPnlLabel}>
-        TOTAL OPEN POSITIONS
-    </div>
+                    <div className={styles.totalPnlValue}>
+                        {totalOpenPositions}
+                    </div>
+                </div>
 
-    <div className={styles.totalPnlValue}>
-        {totalOpenPositions}
-    </div>
-</div>
+                <div className={styles.totalPnlBox}>
+                    <div className={styles.totalPnlLabel}>
+                        TOTAL OPEN VALUE (or anything you want)
+                    </div>
+
+                    <div className={styles.totalPnlValue}>
+                        {/* same value for now */}
+                        {totalOpenPositions}
+                    </div>
+                </div>
+            </div>
 
             <div className={styles.totalPnlBox}>
-    <div className={styles.totalPnlLabel}>
-        TOTAL PNL OF OPEN TRADES
-    </div>
+                <div className={styles.totalPnlLabel}>
+                    TOTAL PNL OF OPEN TRADES
+                </div>
 
-    <div
-        className={styles.totalPnlValue}
-        style={{
-            color: openPnL >= 0 ? "green" : "red",
-        }}
-    >
-        ₹ {openPnL.toFixed(2)}
-    </div>
-</div>
+                <div
+                    className={styles.totalPnlValue}
+                    style={{
+                        color: openPnL >= 0 ? "green" : "red"
+                    }}
+                >
+                    ₹ {openPnL.toFixed(2)}
+                </div>
+            </div>
 
             {/* ======================
                 FUTURES TABLE
@@ -797,159 +809,158 @@ AUTO REFRESH
                 )}
             </section>
 
-
             {/* ======================
     EXIT TRADES TABLE
 ====================== */}
-<div className={styles.totalPnlBox}>
-    <div className={styles.totalPnlLabel}>
-        TOTAL PNL OF CLOSED TRADES
-    </div>
+            <div className={styles.totalPnlBox}>
+                <div className={styles.totalPnlLabel}>
+                    TOTAL PNL OF CLOSED TRADES
+                </div>
 
-    <div
-        className={styles.totalPnlValue}
-        style={{
-            color: totalPnL >= 0 ? "green" : "red",
-        }}
-    >
-        ₹ {totalPnL.toFixed(2)}
-    </div>
-</div>
-<section className={styles.section}>
-    <h2 className={styles.sectionTitle}>
-        Futures Exit Trades
-    </h2>
+                <div
+                    className={styles.totalPnlValue}
+                    style={{
+                        color: totalPnL >= 0 ? "green" : "red"
+                    }}
+                >
+                    ₹ {totalPnL.toFixed(2)}
+                </div>
+            </div>
+            <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                    Futures Exit Trades
+                </h2>
 
-    {futuresTrades.length === 0 ? (
-        <div className={styles.empty}>
-            No futures exit trades
-        </div>
-    ) : (
-        <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Qty</th>
-                        <th>Entry Price</th>
-                        <th>Exit Price</th>
-                        <th>PnL</th>
-                        <th>Expiry</th>
-                        <th>User</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
+                {futuresTrades.length === 0 ? (
+                    <div className={styles.empty}>
+                        No futures exit trades
+                    </div>
+                ) : (
+                    <div className={styles.tableWrapper}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Qty</th>
+                                    <th>Entry Price</th>
+                                    <th>Exit Price</th>
+                                    <th>PnL</th>
+                                    <th>Expiry</th>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
 
-                <tbody>
-                    {futuresTrades.map((t: any) => (
-                        <tr key={t.id}>
-                            <td>{t.position?.script}</td>
-                            <td>{t.quantity}</td>
+                            <tbody>
+                                {futuresTrades.map((t: any) => (
+                                    <tr key={t.id}>
+                                        <td>{t.position?.script}</td>
+                                        <td>{t.quantity}</td>
 
-                            <td>
-                                ₹{Number(t.position?.averagePrice).toFixed(2)}
-                            </td>
+                                        <td>
+                                            ₹{Number(t.position?.averagePrice).toFixed(2)}
+                                        </td>
 
-                            <td>₹{Number(t.price).toFixed(2)}</td>
+                                        <td>₹{Number(t.price).toFixed(2)}</td>
 
-                            <td
-                                style={{
-                                    color:
-                                        t.pnl >= 0 ? "green" : "red",
-                                }}
-                            >
-                                ₹{t.pnl.toFixed(2)}
-                            </td>
+                                        <td
+                                            style={{
+                                                color:
+                                        t.pnl >= 0 ? "green" : "red"
+                                            }}
+                                        >
+                                            ₹{t.pnl.toFixed(2)}
+                                        </td>
 
-                            <td>
-                                {t.position?.expiry ?? "-"}
-                            </td>
+                                        <td>
+                                            {t.position?.expiry ?? "-"}
+                                        </td>
 
-                            <td>{t.user?.username}</td>
+                                        <td>{t.user?.username}</td>
 
-                            <td>
-                                {new Date(t.createdAt).toLocaleString()}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    )}
-</section>
+                                        <td>
+                                            {new Date(t.createdAt).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
 
-<section className={styles.section}>
-    <h2 className={styles.sectionTitle}>
-        Options Exit Trades
-    </h2>
+            <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                    Options Exit Trades
+                </h2>
 
-    {optionsTrades.length === 0 ? (
-        <div className={styles.empty}>
-            No options exit trades
-        </div>
-    ) : (
-        <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Type</th>
-                        <th>Strike</th>
-                        <th>Option</th>
-                        <th>Qty</th>
-                        <th>Entry Price</th>
-                        <th>Exit Price</th>
-                        <th>PnL</th>
-                        <th>Expiry</th>
-                        <th>User</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
+                {optionsTrades.length === 0 ? (
+                    <div className={styles.empty}>
+                        No options exit trades
+                    </div>
+                ) : (
+                    <div className={styles.tableWrapper}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Type</th>
+                                    <th>Strike</th>
+                                    <th>Option</th>
+                                    <th>Qty</th>
+                                    <th>Entry Price</th>
+                                    <th>Exit Price</th>
+                                    <th>PnL</th>
+                                    <th>Expiry</th>
+                                    <th>User</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
 
-                <tbody>
-                    {optionsTrades.map((t: any) => (
-                        <tr key={t.id}>
-                            <td>{t.position?.script}</td>
+                            <tbody>
+                                {optionsTrades.map((t: any) => (
+                                    <tr key={t.id}>
+                                        <td>{t.position?.script}</td>
 
-                            <td>{t.position?.instrumentType}</td>
+                                        <td>{t.position?.instrumentType}</td>
 
-                            <td>{t.position?.strikePrice ?? "-"}</td>
+                                        <td>{t.position?.strikePrice ?? "-"}</td>
 
-                            <td>{t.position?.optionType ?? "-"}</td>
+                                        <td>{t.position?.optionType ?? "-"}</td>
 
-                            <td>{t.quantity}</td>
+                                        <td>{t.quantity}</td>
 
-                            <td>
-                                ₹{Number(t.position?.averagePrice).toFixed(2)}
-                            </td>
+                                        <td>
+                                            ₹{Number(t.position?.averagePrice).toFixed(2)}
+                                        </td>
 
-                            <td>₹{Number(t.price).toFixed(2)}</td>
+                                        <td>₹{Number(t.price).toFixed(2)}</td>
 
-                            <td
-                                style={{
-                                    color:
-                                        t.pnl >= 0 ? "green" : "red",
-                                }}
-                            >
-                                ₹{t.pnl.toFixed(2)}
-                            </td>
+                                        <td
+                                            style={{
+                                                color:
+                                        t.pnl >= 0 ? "green" : "red"
+                                            }}
+                                        >
+                                            ₹{t.pnl.toFixed(2)}
+                                        </td>
 
-                            <td>
-                                {t.position?.expiry ?? "-"}
-                            </td>
+                                        <td>
+                                            {t.position?.expiry ?? "-"}
+                                        </td>
 
-                            <td>{t.user?.username}</td>
+                                        <td>{t.user?.username}</td>
 
-                            <td>
-                                {new Date(t.createdAt).toLocaleString()}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    )}
-</section>
+                                        <td>
+                                            {new Date(t.createdAt).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
         </div>
     );
 }
