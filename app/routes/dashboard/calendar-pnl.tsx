@@ -12,9 +12,9 @@ import {
     db
 } from "~/database/db.server";
 
-import {
-    dailyPnls
-} from "~/database/schema.server";
+// import {
+//     dailyPnls
+// } from "~/database/schema.server";
 
 import styles from "./calendar-pnl.module.css";
 
