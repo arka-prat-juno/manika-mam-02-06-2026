@@ -1,5 +1,5 @@
 const BASE_URL =
-    "http://localhost:3000/api/api-settlement";
+    "http://localhost:5173/api/api-settlement";
 
 async function runSettlement() {
 
@@ -19,4 +19,7 @@ async function runSettlement() {
     }
 }
 
-runSettlement();
+setInterval(
+    runSettlement,
+    2000
+);

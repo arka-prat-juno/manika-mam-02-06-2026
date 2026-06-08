@@ -1,5 +1,5 @@
 const BASE_URL =
-    "http://localhost:3000/api/live-price-update";
+    "http://localhost:5173/api/live-price-update";
 
 async function updateLivePrices() {
 

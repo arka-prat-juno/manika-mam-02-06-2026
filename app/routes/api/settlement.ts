@@ -49,7 +49,7 @@ export async function loader() {
 
     if (
         totalMinutes >= 540 &&
-        totalMinutes <= 570
+        totalMinutes <= 720
     ) {
 
         await updatePreviousSettledPrices(await doALogin());

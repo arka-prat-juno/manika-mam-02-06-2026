@@ -240,7 +240,7 @@ export async function updatePreviousSettledPrices(token: string) {
                             year:
                                 "numeric"
                         }
-                    );
+                    ).replace(",", "");
 
                 const startTime =
                     `${formattedDate} 091500`;
@@ -289,21 +289,29 @@ export async function updatePreviousSettledPrices(token: string) {
 
                 if (
                     pipeData &&
-                    pipeData.trim("|")
+    pipeData !== ""
                 ) {
 
+                    const cleaned =
+                        pipeData.replace(/\|$/, "");
+
                     const parts =
-                        pipeData
-                            .trim("|")
-                            .split("|");
+                        cleaned.split("|");
 
                     if (
                         parts.length >= 5 &&
-                        parts[4]
+        parts[4]
                     ) {
 
                         closePrice =
                             parts[4];
+
+                        // console.log(
+                        //     "FOUND",
+                        //     position.script,
+                        //     formattedDate,
+                        //     closePrice
+                        // );
 
                         break;
                     }
